@@ -1,0 +1,22 @@
+{
+  "site": "dishwasher-care-lab",
+  "site_name": "Dishwasher Care Lab",
+  "base_url": "https://dishwashercarehub.com",
+  "articles": [
+    {
+      "slug": "how-to-clean-dishwasher-filter",
+      "title": "How To Clean Dishwasher Filter",
+      "keyword": "how to clean dishwasher filter",
+      "summary": "A safe, practical guide to how to clean dishwasher filter with simple maintenance steps, common mistakes to avoid, and a clear point where professional service makes more sense.",
+      "url": "https://dishwashercarehub.com/articles/how-to-clean-dishwasher-filter/"
+    },
+    {
+      "slug": "dishwasher-smells-bad-after-wash",
+      "title": "Dishwasher Smells Bad After Wash",
+      "keyword": "dishwasher smells bad after wash",
+      "summary": "A safe, practical guide to dishwasher smells bad after wash with simple maintenance steps, common mistakes to avoid, and a clear point where professional service makes more sense.",
+      "url": "https://dishwashercarehub.com/articles/dishwasher-smells-bad-after-wash/"
+    }
+  ],
+  "generated_at": "2026-04-14T06:00:54.943054+00:00"
+}
