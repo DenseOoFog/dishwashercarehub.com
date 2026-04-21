@@ -193,6 +193,51 @@ main {
   background: linear-gradient(180deg, rgba(18, 41, 36, 0.96), rgba(11, 21, 30, 0.96));
 }
 .article-section { margin-bottom: 0; }
+.figure-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+.article-figure {
+  margin: 0;
+  overflow: hidden;
+}
+.article-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(140, 245, 207, 0.14);
+  background: rgba(255,255,255,0.02);
+}
+.article-figure figcaption {
+  margin-top: 0.85rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.signal-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.signal-card {
+  border: 1px solid rgba(140, 245, 207, 0.14);
+  border-radius: 18px;
+  padding: 1rem;
+  background: rgba(255,255,255,0.03);
+}
+.signal-card strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+  color: #f3fbff;
+}
+.pro-note {
+  border-left: 4px solid var(--brand);
+  padding: 1rem 1rem 1rem 1.1rem;
+  background: rgba(24, 226, 153, 0.06);
+  border-radius: 18px;
+}
 .warning-card {
   background: linear-gradient(180deg, rgba(73, 34, 7, 0.97), rgba(55, 23, 5, 0.97));
   border-color: rgba(255, 190, 112, 0.25);

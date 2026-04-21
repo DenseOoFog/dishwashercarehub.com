@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Dishwasher drain path schematic</title>
+  <desc id="desc">Simplified under-sink drain path showing dishwasher tub, filter area, drain hose high loop, optional air gap, garbage disposal connection, and sink drain. The callouts highlight the most common restriction points linked to standing water after a cycle.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08131d"/>
+      <stop offset="100%" stop-color="#102434"/>
+    </linearGradient>
+    <linearGradient id="pipe" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8cf5cf"/>
+      <stop offset="100%" stop-color="#18e299"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="760" rx="36" fill="url(#bg)"/>
+  <text x="70" y="86" fill="#f3fbff" font-family="Inter, Arial, sans-serif" font-size="40" font-weight="800">Where standing water usually starts: shared drain path schematic</text>
+  <text x="70" y="124" fill="#9bb1c1" font-family="Inter, Arial, sans-serif" font-size="22">A dishwasher rarely drains in isolation. Slow flow anywhere along the shared path can leave water behind in the tub.</text>
+
+  <rect x="110" y="210" width="250" height="250" rx="28" fill="#132c3d" stroke="#2bd79b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="150" y="260" fill="#f3fbff" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="800">Dishwasher tub</text>
+  <ellipse cx="235" cy="340" rx="90" ry="48" fill="#0f2230" stroke="#8cf5cf" stroke-width="3"/>
+  <circle cx="235" cy="340" r="28" fill="#18e299" opacity="0.3"/>
+  <text x="147" y="420" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="20">Filter well, sump opening, and</text>
+  <text x="147" y="448" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="20">food debris are the first checks.</text>
+
+  <path d="M360 340 C 460 340, 470 160, 590 160 C 725 160, 705 320, 815 320" fill="none" stroke="url(#pipe)" stroke-width="22" stroke-linecap="round"/>
+  <text x="465" y="128" fill="#8cf5cf" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">High loop in drain hose</text>
+  <text x="453" y="508" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="21">A missing high loop, kink, or grease-heavy hose can slow draining or allow dirty water to move the wrong direction.</text>
+
+  <rect x="808" y="210" width="120" height="170" rx="22" fill="#143445" stroke="#2bd79b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="832" y="252" fill="#f3fbff" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800">Air gap</text>
+  <text x="830" y="286" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="18">If present, debris</text>
+  <text x="830" y="312" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="18">here can push</text>
+  <text x="830" y="338" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="18">water backward.</text>
+
+  <rect x="980" y="240" width="140" height="230" rx="24" fill="#132c3d" stroke="#2bd79b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="1000" y="286" fill="#f3fbff" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="800">Disposal</text>
+  <text x="1000" y="320" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="18">New install?</text>
+  <text x="1000" y="346" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="18">Check inlet</text>
+  <text x="1000" y="372" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="18">and routing.</text>
+  <path d="M928 320 H980" stroke="#8cf5cf" stroke-width="16" stroke-linecap="round"/>
+
+  <rect x="910" y="520" width="220" height="130" rx="26" fill="#132c3d" stroke="#2bd79b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="940" y="570" fill="#f3fbff" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800">Sink drain path</text>
+  <text x="940" y="608" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="20">If the sink is slow too, start here</text>
+  <text x="940" y="636" fill="#d5e8f2" font-family="Inter, Arial, sans-serif" font-size="20">before assuming pump failure.</text>
+
+  <circle cx="235" cy="340" r="124" fill="none" stroke="#ffb36b" stroke-width="4" stroke-dasharray="10 12" opacity="0.8"/>
+  <circle cx="572" cy="160" r="92" fill="none" stroke="#ffb36b" stroke-width="4" stroke-dasharray="10 12" opacity="0.8"/>
+  <circle cx="868" cy="294" r="88" fill="none" stroke="#ffb36b" stroke-width="4" stroke-dasharray="10 12" opacity="0.8"/>
+  <circle cx="1050" cy="352" r="108" fill="none" stroke="#ffb36b" stroke-width="4" stroke-dasharray="10 12" opacity="0.8"/>
+
+  <text x="86" y="566" fill="#ffcf9d" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="700">Common choke points</text>
+  <text x="86" y="596" fill="#ffe6cb" font-family="Inter, Arial, sans-serif" font-size="20">1. Filter well debris</text>
+  <text x="86" y="624" fill="#ffe6cb" font-family="Inter, Arial, sans-serif" font-size="20">2. Hose kink or low loop</text>
+  <text x="86" y="652" fill="#ffe6cb" font-family="Inter, Arial, sans-serif" font-size="20">3. Clogged air gap</text>
+  <text x="86" y="680" fill="#ffe6cb" font-family="Inter, Arial, sans-serif" font-size="20">4. Disposal or sink-side restriction</text>
+</svg>
