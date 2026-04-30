@@ -1,0 +1,31 @@
+Search Console report for https://dishwashercarehub.com/
+Date range: 2026-04-02 to 2026-04-29
+Rows fetched: 53
+
+Top 20 pages by impressions:
+https://dishwashercarehub.com/articles/dishwasher-standing-water-after-cycle/ — impressions=113 clicks=0 avg_pos=59.08
+https://dishwashercarehub.com/articles/standing-water-in-dishwasher-filter-area/ — impressions=9 clicks=0 avg_pos=34.75
+https://dishwashercarehub.com/articles/dishwasher-detergent-pod-not-dissolving/ — impressions=7 clicks=0 avg_pos=55.42
+https://dishwashercarehub.com/articles/dishwasher-water-in-bottom-after-cycle-filter-clean/ — impressions=1 clicks=0 avg_pos=65.00
+
+Top 20 queries by impressions:
+how to drain a dishwasher with standing water — impressions=25 clicks=0 avg_pos=69.52
+how to unclog a dishwasher with standing water — impressions=25 clicks=0 avg_pos=89.85
+standing water in dishwasher — impressions=10 clicks=0 avg_pos=51.18
+water in dishwasher — impressions=8 clicks=0 avg_pos=60.44
+standing water dishwasher — impressions=6 clicks=0 avg_pos=47.60
+water sitting in bottom of dishwasher — impressions=5 clicks=0 avg_pos=53.38
+why is there standing water in my dishwasher — impressions=3 clicks=0 avg_pos=54.50
+pods not dissolving in washer — impressions=2 clicks=0 avg_pos=55.50
+dishwasher has standing water — impressions=2 clicks=0 avg_pos=65.50
+dishwasher has water in bottom after cycle — impressions=2 clicks=0 avg_pos=42.50
+dishwasher standing water — impressions=2 clicks=0 avg_pos=51.00
+how to drain standing water in dishwasher — impressions=2 clicks=0 avg_pos=68.00
+how to remove standing water from dishwasher — impressions=2 clicks=0 avg_pos=55.50
+how to remove standing water in dishwasher — impressions=2 clicks=0 avg_pos=67.00
+pool of water in dishwasher — impressions=2 clicks=0 avg_pos=59.50
+standing water in dishwasher whirlpool — impressions=2 clicks=0 avg_pos=47.50
+standing water in the dishwasher — impressions=2 clicks=0 avg_pos=65.00
+water standing in dishwasher — impressions=2 clicks=0 avg_pos=55.50
+why does my dishwasher have standing water — impressions=2 clicks=0 avg_pos=60.00
+water in dishwasher filter — impressions=2 clicks=0 avg_pos=22.00

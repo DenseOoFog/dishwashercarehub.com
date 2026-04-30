@@ -34,7 +34,7 @@ SCOPES = ['https://www.googleapis.com/auth/webmasters.readonly']
 SECRETS = os.path.expanduser('~/.hermes/profiles/adsense/credentials/oauth_client_secrets.json')
 TOKEN_PATH = os.path.expanduser('~/.hermes/profiles/adsense/credentials/oauth_token.json')
 OUT_BASE = Path('/Users/densefog/Agents/dishwashercarehub.com/Performance')
-SITE_URL = 'https://dishwashercarehub.com'
+SITE_URL = 'https://dishwashercarehub.com/'
 
 if not os.path.exists(SECRETS):
     print(f"OAuth client secrets not found at {SECRETS}")
