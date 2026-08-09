@@ -42,3 +42,4 @@ jobs:
       - run: node scripts/test_running_cost.js
       - run: node scripts/test_repair_or_replace.js
       - run: node scripts/test_symptom_checker.js
+      - run: node scripts/test_result_actions.js

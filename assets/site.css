@@ -290,6 +290,8 @@ main {
 .maintenance-task p { margin: 0.45rem 0 0; color: var(--muted); }
 .maintenance-due { display: block; margin-top: 0.35rem; color: var(--brand-soft); font-size: 0.92rem; font-weight: 700; }
 .print-actions { margin-top: 1rem; }
+.tool-result-actions { align-items: center; }
+.tool-action-status { margin: 0; color: var(--muted); font-size: 0.92rem; }
 @media print {
   .site-header, footer, .tool-form, .article-section, .print-actions, .adsbygoogle { display: none !important; }
   body, main, .surface-card, .tool-result { color: #111 !important; background: #fff !important; box-shadow: none !important; }

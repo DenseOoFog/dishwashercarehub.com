@@ -81,6 +81,10 @@ def main():
             errors.append(f"{relative}: missing useful no-JavaScript fallback")
         if not re.search(r"stay in this browser|runs? in your browser", source, re.I):
             errors.append(f"{relative}: missing browser-local privacy disclosure")
+        if 'class="surface-card tool-result"' in source and (
+            '<script src="../../assets/result-actions.js" defer></script>' not in source
+        ):
+            errors.append(f"{relative}: result tool is missing local copy and print actions")
 
         faq = re.search(r'<ul class="faq-list">(.*?)</ul>', source, re.DOTALL)
         faq_count = len(re.findall(r"<li\b", faq.group(1))) if faq else 0
