@@ -26,6 +26,7 @@ ADSENSE_SCRIPT_URL = (
     "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?"
     "client=ca-pub-9156049827002127"
 )
+ADS_TXT_RECORD = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
 ORGANIZATION_ID = "https://dishwashercarehub.com/#organization"
 WEBSITE_ID = "https://dishwashercarehub.com/#website"
 BAD_PATTERNS = {
@@ -724,7 +725,10 @@ required_privacy_disclosures = {
     "Google advertising settings": "https://adssettings.google.com/",
     "third-party advertising opt-out": "https://optout.aboutads.info/",
     "certified CMP disclosure": "Google-certified consent management platform",
+    "US state opt-out disclosure": "Do Not Sell or Share My Personal Information",
+    "Global Privacy Platform disclosure": "Global Privacy Platform",
     "privacy contact": "mailto:pqiswin1@gmail.com",
+    "children's privacy disclosure": "not directed to children under 13",
 }
 for label, required_text in required_privacy_disclosures.items():
     if required_text not in privacy_text:
@@ -735,8 +739,7 @@ ads_txt_lines = [
     for line in (ROOT / "ads.txt").read_text(encoding="utf-8").splitlines()
     if line.strip()
 ]
-expected_ads_txt = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
-if ads_txt_lines != [expected_ads_txt]:
+if ads_txt_lines != [ADS_TXT_RECORD]:
     errors.append("ads.txt: publisher declaration is missing, duplicated, or malformed")
 
 not_found_path = ROOT / "404.html"

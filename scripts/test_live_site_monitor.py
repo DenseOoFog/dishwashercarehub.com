@@ -10,6 +10,7 @@ from check_live_site import (
     atom_entry_urls,
     sitemap_urls,
     validate_html_page,
+    validate_privacy_page,
     validate_redirect,
     validate_suspicious_probe,
 )
@@ -116,6 +117,23 @@ class LiveSiteMonitorTests(unittest.TestCase):
         redirect_headers["Location"] = "/articles/new/"
         response = Response(source, source, 308, redirect_headers, "")
         self.assertEqual(validate_redirect(response, source, destination), [])
+
+    def test_privacy_monitor_requires_advertising_choices_and_consent_disclosures(self):
+        url = "https://dishwashercarehub.com/privacy/"
+        complete_body = " ".join(
+            (
+                "https://policies.google.com/technologies/partner-sites",
+                "https://adssettings.google.com/",
+                "Google-certified consent management platform",
+                "Do Not Sell or Share My Personal Information",
+                "Global Privacy Platform",
+                "mailto:pqiswin1@gmail.com",
+            )
+        )
+        complete = Response(url, url, 200, headers("text/html"), complete_body)
+        self.assertEqual(validate_privacy_page(complete), [])
+        incomplete = Response(url, url, 200, headers("text/html"), "Privacy")
+        self.assertGreaterEqual(len(validate_privacy_page(incomplete)), 6)
 
     def test_redirect_rejects_temporary_or_wrong_destination(self):
         source = "https://dishwashercarehub.com/articles/old/"

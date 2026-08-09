@@ -23,6 +23,14 @@ ADSENSE_SCRIPT_URL = (
     "client=ca-pub-9156049827002127"
 )
 EXPECTED_ADS_TXT = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
+REQUIRED_PRIVACY_DISCLOSURES = (
+    "https://policies.google.com/technologies/partner-sites",
+    "https://adssettings.google.com/",
+    "Google-certified consent management platform",
+    "Do Not Sell or Share My Personal Information",
+    "Global Privacy Platform",
+    "mailto:pqiswin1@gmail.com",
+)
 INDEXNOW_KEY = "3c65545768a3f277e57c54d66b2dacbe"
 USER_AGENT = "DishwasherCareLab-LiveMonitor/1.0 (+https://dishwashercarehub.com/contact/)"
 REMOVED_BACKUP_URLS = (
@@ -208,6 +216,16 @@ def validate_redirect(response, source_url, destination_url):
     return errors
 
 
+def validate_privacy_page(response):
+    errors = []
+    if response.status != 200:
+        return [f"privacy policy returned HTTP {response.status}"]
+    for disclosure in REQUIRED_PRIVACY_DISCLOSURES:
+        if disclosure not in response.body:
+            errors.append(f"privacy policy is missing required disclosure: {disclosure}")
+    return errors
+
+
 def sitemap_urls(response):
     if response.status != 200:
         raise RuntimeError(f"sitemap returned HTTP {response.status}")
@@ -327,6 +345,9 @@ def main():
     ads_lines = [line.strip() for line in ads_txt.body.splitlines() if line.strip()]
     if ads_txt.status != 200 or ads_lines != [EXPECTED_ADS_TXT]:
         errors.append("ads.txt is unavailable, duplicated, or does not match the publisher ID")
+
+    privacy = fetch(f"{BASE_URL}/privacy/")
+    errors.extend(validate_privacy_page(privacy))
 
     indexnow_key = fetch(f"{BASE_URL}/{INDEXNOW_KEY}.txt")
     if indexnow_key.status != 200 or indexnow_key.body.strip() != INDEXNOW_KEY:
