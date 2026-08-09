@@ -171,6 +171,11 @@ canonical_pages = set()
 page_records = {}
 for path in HTML_FILES:
     text = path.read_text(encoding="utf-8")
+    if "<!doctype html>" in text.lower():
+        if text.count('<a class="skip-link" href="#main-content">Skip to main content</a>') != 1:
+            errors.append(f"{path.relative_to(ROOT)}: expected one keyboard skip link")
+        if len(re.findall(r'<main\b[^>]*\bid="main-content"', text)) != 1:
+            errors.append(f"{path.relative_to(ROOT)}: main content has no unique skip-link target")
     if path.name == "index.html":
         for marker, expected in (("<!doctype html>", 1), ("</html>", 1), ("<footer", 1)):
             count = text.lower().count(marker)

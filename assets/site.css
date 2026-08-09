@@ -1,11 +1,12 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --bg: #07111a;
   --bg-accent: #0c1a26;
   --text: #e6f1f7;
   --muted: #9bb1c1;
   --brand: #18e299;
   --brand-deep: #0fa968;
+  --brand-soft: #69e7bb;
   --accent: #8cf5cf;
   --line: rgba(140, 245, 207, 0.18);
   --surface: rgba(10, 20, 31, 0.92);
@@ -33,6 +34,24 @@ a {
   text-decoration: none;
 }
 a:hover { color: #d9ffef; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(24, 226, 153, 0.38);
+}
+.skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #04110c;
+  font-weight: 800;
+  transform: translateY(-180%);
+}
+.skip-link:focus { transform: translateY(0); }
 p, li { line-height: 1.72; }
 h1, h2, h3 {
   line-height: 1.08;
@@ -317,4 +336,8 @@ main {
   .hero-panel, .article-hero, .surface-card { padding: 1.1rem; }
   .hero-actions { flex-direction: column; }
   .pill-button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .skip-link { transition: none; }
 }
