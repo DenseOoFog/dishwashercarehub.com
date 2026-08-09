@@ -41,6 +41,11 @@ UNIVERSAL_RECIPE_PATTERNS = {
         r"\b(?:hottest and longest cycle|monthly without exception)\b",
         re.IGNORECASE,
     ),
+    "universal dishwasher reset": re.compile(
+        r"\b(?:hard reset|turn off the (?:circuit )?breaker for 60 seconds|"
+        r"hold(?:ing)? .+? for 3 to 5 seconds)\b",
+        re.IGNORECASE,
+    ),
 }
 
 
