@@ -292,6 +292,33 @@ for path in HTML_FILES:
             or about_objects[0].get("isPartOf") != {"@id": WEBSITE_ID}
         ):
             errors.append("about/index.html: AboutPage does not reference the site identity")
+        for disclosure in (
+            "not staffed or represented as a licensed appliance-repair",
+            "independently operated website",
+            "intended to be supported by advertising",
+            "Corrections",
+        ):
+            if disclosure not in text:
+                errors.append(f"about/index.html: missing disclosure {disclosure!r}")
+    if path == ROOT / "editorial-policy" / "index.html":
+        for disclosure in (
+            "Evidence and attribution standards",
+            "Automation and AI assistance",
+            "not treated as sources or credentialed reviewers",
+            "substantive change updates the visible review date",
+        ):
+            if disclosure not in text:
+                errors.append(
+                    f"editorial-policy/index.html: missing disclosure {disclosure!r}"
+                )
+    if path == ROOT / "contact" / "index.html":
+        for disclosure in (
+            "does not provide emergency help",
+            "individualized repair diagnosis",
+            "guaranteed response times",
+        ):
+            if disclosure not in text:
+                errors.append(f"contact/index.html: missing disclosure {disclosure!r}")
     if path.parent.parent.name == "tools":
         if "<noscript>" not in text or "needs JavaScript" not in text:
             errors.append(

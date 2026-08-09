@@ -18,6 +18,11 @@ MIN_DUPLICATE_PARAGRAPH_WORDS = 18
 MAX_FIVE_GRAM_JACCARD = 0.25
 WORD_RE = re.compile(r"[A-Za-z0-9]+(?:['’.-][A-Za-z0-9]+)*")
 UNIVERSAL_RECIPE_PATTERNS = {
+    "anonymous technician authority claim": re.compile(
+        r"\b(?:experienced (?:appliance )?technicians|technicians report|"
+        r"four out of five .+? calls|service data from .+? networks)\b",
+        re.IGNORECASE,
+    ),
     "fixed detergent dose": re.compile(
         r"\b(?:one tablespoon per normal load|reduce detergent to one tablespoon)\b",
         re.IGNORECASE,
