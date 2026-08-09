@@ -19,6 +19,8 @@ jobs:
       - run: python scripts/validate_site.py
       - run: python scripts/audit_workflow_security.py
       - run: python scripts/test_workflow_security.py
+      - run: python scripts/audit_dependency_lock.py
+      - run: python scripts/test_dependency_lock.py
       - run: python scripts/audit_content_quality.py
       - run: python scripts/generate_feed.py --check
       - run: python scripts/test_gsc_fetch.py
