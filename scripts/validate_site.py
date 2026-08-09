@@ -402,6 +402,74 @@ for path in HTML_FILES:
                 errors.append(
                     f"{path.relative_to(ROOT)}: structured author does not match visible byline"
                 )
+        faq_objects = [
+            item for item in structured_objects
+            if isinstance(item, dict) and item.get("@type") == "FAQPage"
+        ]
+        if len(faq_objects) != 1:
+            errors.append(
+                f"{path.relative_to(ROOT)}: expected one FAQPage JSON-LD object"
+            )
+        else:
+            questions = faq_objects[0].get("mainEntity")
+            if not isinstance(questions, list) or len(questions) < 3:
+                errors.append(
+                    f"{path.relative_to(ROOT)}: FAQPage requires at least three questions"
+                )
+            else:
+                for question in questions:
+                    answer = question.get("acceptedAnswer", {}) if isinstance(question, dict) else {}
+                    if (
+                        not isinstance(question, dict)
+                        or question.get("@type") != "Question"
+                        or not str(question.get("name", "")).strip()
+                        or not isinstance(answer, dict)
+                        or answer.get("@type") != "Answer"
+                        or not str(answer.get("text", "")).strip()
+                        or str(answer.get("text", "")).strip()[-1:] not in ".!?"
+                    ):
+                        errors.append(
+                            f"{path.relative_to(ROOT)}: FAQPage has an incomplete question or answer"
+                        )
+                        break
+        breadcrumb_objects = [
+            item for item in structured_objects
+            if isinstance(item, dict) and item.get("@type") == "BreadcrumbList"
+        ]
+        if len(breadcrumb_objects) != 1:
+            errors.append(
+                f"{path.relative_to(ROOT)}: expected one BreadcrumbList JSON-LD object"
+            )
+        else:
+            breadcrumb_items = breadcrumb_objects[0].get("itemListElement")
+            expected_prefix = [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://dishwashercarehub.com/",
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Articles",
+                    "item": "https://dishwashercarehub.com/#latest-guides",
+                },
+            ]
+            expected_url = parser.canonical.rstrip("/") + "/" if parser.canonical else ""
+            if (
+                not isinstance(breadcrumb_items, list)
+                or len(breadcrumb_items) != 3
+                or breadcrumb_items[:2] != expected_prefix
+                or not isinstance(breadcrumb_items[2], dict)
+                or breadcrumb_items[2].get("@type") != "ListItem"
+                or breadcrumb_items[2].get("position") != 3
+                or not str(breadcrumb_items[2].get("name", "")).strip()
+                or breadcrumb_items[2].get("item") != expected_url
+            ):
+                errors.append(
+                    f"{path.relative_to(ROOT)}: article breadcrumb hierarchy is incomplete or inconsistent"
+                )
     for link in parser.links:
         target = local_target(path, link)
         if target and not target.exists():
