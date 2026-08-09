@@ -17,3 +17,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: python scripts/validate_site.py
+      - run: python scripts/test_gsc_fetch.py

@@ -1,178 +1,192 @@
 #!/usr/bin/env python3
-"""
-GSC fetcher for dishwashercarehub.com
+"""Fetch and aggregate dishwashercarehub.com Search Console performance data."""
 
-Usage:
-  # create venv (optional, recommended)
-  python3 -m venv ~/.hermes/profiles/adsense/venv
-  source ~/.hermes/profiles/adsense/venv/bin/activate
-  # install deps (if pip proxy issues, run with env -u ... as shown below)
-  Install google-auth, google-auth-httplib2, and google-api-python-client in a virtual environment.
+from __future__ import annotations
 
-  # run
-  ~/.hermes/profiles/adsense/venv/bin/python scripts/gsc_fetch.py
-
-This script expects the service account JSON at:
-  ~/.hermes/profiles/adsense/credentials/searchconsole-service-account.json
-
-It will write outputs to:
-  /Users/densefog/Agents/dishwashercarehub.com/Performance/Performance-on-Search-YYYY-MM-DD/
-
-If the google API libs are not available, the script prints clear instructions and exits.
-"""
-
+import csv
 import os
 import sys
-import json
+from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
-KEYPATH = os.path.expanduser(os.environ.get(
-    'GSC_CREDENTIALS_FILE',
-    '~/.hermes/profiles/adsense/credentials/searchconsole-service-account.json',
-))
-OUT_BASE = Path(os.environ.get('GSC_OUTPUT_DIR', Path(__file__).resolve().parents[1] / 'Performance'))
+SCOPES = ["https://www.googleapis.com/auth/webmasters.readonly"]
+DEFAULT_PROPERTY = "https://dishwashercarehub.com/"
+ROW_LIMIT = 25_000
 
-# helper to print install guidance
-def print_install_help():
-    print("\nERROR: required google client libraries not installed.\n")
-    print("Run these commands in your shell (recommended to use the project's venv):\n")
-    print("python3 -m venv ~/.hermes/profiles/adsense/venv")
-    print("source ~/.hermes/profiles/adsense/venv/bin/activate")
-    print("# If your shell/host injects proxy env vars, run the pip install commands with those envs removed:")
-    print("env -u ALL_PROXY -u all_proxy -u HTTP_PROXY -u http_proxy -u HTTPS_PROXY -u https_proxy \\")
-    print("  ~/.hermes/profiles/adsense/venv/bin/python -m pip install --upgrade pip setuptools wheel")
-    print("env -u ALL_PROXY -u all_proxy -u HTTP_PROXY -u http_proxy -u HTTPS_PROXY -u https_proxy \\")
-    print("  ~/.hermes/profiles/adsense/venv/bin/python -m pip install google-auth google-auth-httplib2 google-api-python-client")
-    print("\nAfter that, run this script with the venv python.\n")
 
-# basic API helpers
-SCOPES = ['https://www.googleapis.com/auth/webmasters.readonly']
+def normalize_property_url(value: str) -> str:
+    """Normalize only for matching; API calls still use Google's exact siteUrl."""
+    value = value.strip()
+    if value.startswith("sc-domain:"):
+        return value.rstrip("/")
+    return value.rstrip("/") + "/"
 
-if not os.path.exists(KEYPATH):
-    print(f"Service account key not found at: {KEYPATH}\nPlease place the JSON key there and set permissions chmod 600.")
-    sys.exit(3)
 
-if os.path.getsize(KEYPATH) == 0:
-    print(f"Search Console credential file is empty: {KEYPATH}")
-    sys.exit(3)
+def select_property(site_entries: list[dict], requested: str) -> str | None:
+    """Return the exact Search Console property string advertised by the API."""
+    exact = [entry.get("siteUrl") for entry in site_entries if entry.get("siteUrl") == requested]
+    if exact:
+        return exact[0]
+    normalized = normalize_property_url(requested)
+    matches = [
+        entry.get("siteUrl")
+        for entry in site_entries
+        if entry.get("siteUrl")
+        and normalize_property_url(entry["siteUrl"]) == normalized
+    ]
+    return matches[0] if len(matches) == 1 else None
 
-try:
-    from google.oauth2 import service_account
-    from googleapiclient.discovery import build
-    from googleapiclient.errors import HttpError
-except Exception:
-    print_install_help()
-    sys.exit(2)
 
-creds = service_account.Credentials.from_service_account_file(KEYPATH, scopes=SCOPES)
-webmasters = build('webmasters', 'v3', credentials=creds)
+def aggregate_rows(rows: list[dict], key_index: int) -> dict[str, dict[str, float]]:
+    """Aggregate metrics, weighting average position by impressions."""
+    totals = defaultdict(lambda: {"clicks": 0.0, "impressions": 0.0, "position_weight": 0.0})
+    for row in rows:
+        keys = row.get("keys", [])
+        if len(keys) <= key_index or not keys[key_index]:
+            continue
+        key = keys[key_index]
+        impressions = float(row.get("impressions", 0) or 0)
+        item = totals[key]
+        item["clicks"] += float(row.get("clicks", 0) or 0)
+        item["impressions"] += impressions
+        item["position_weight"] += float(row.get("position", 0) or 0) * impressions
 
-# list sites the SA can see
-try:
-    sites = webmasters.sites().list().execute()
-except HttpError as he:
-    print("API error listing sites:", str(he))
-    print("Make sure the service-account email has been added as a Search Console user (Settings → Users and permissions)")
-    sys.exit(4)
+    result = {}
+    for key, item in totals.items():
+        impressions = item["impressions"]
+        result[key] = {
+            "clicks": item["clicks"],
+            "impressions": impressions,
+            "ctr": item["clicks"] / impressions if impressions else 0.0,
+            "position": item["position_weight"] / impressions if impressions else 0.0,
+        }
+    return result
 
-site_entries = sites.get('siteEntry', [])
-print(f"Found {len(site_entries)} site entries visible to the service account")
-for s in site_entries:
-    print('-', s.get('siteUrl'), s.get('permissionLevel'))
 
-# pick our site
-SITE_URL = 'https://dishwashercarehub.com'
-if not any(s.get('siteUrl') == SITE_URL for s in site_entries):
-    print(f"\nService account does not appear to have access to {SITE_URL}.\nPlease add the service account email as a user in Search Console.")
-    sys.exit(5)
+def fetch_all_rows(webmasters, site_url: str, request: dict) -> list[dict]:
+    """Page through Search Analytics results instead of truncating at 25k rows."""
+    rows = []
+    start_row = 0
+    while True:
+        page_request = dict(request, rowLimit=ROW_LIMIT, startRow=start_row)
+        response = webmasters.searchanalytics().query(
+            siteUrl=site_url, body=page_request
+        ).execute()
+        batch = response.get("rows", [])
+        rows.extend(batch)
+        if len(batch) < ROW_LIMIT:
+            return rows
+        start_row += ROW_LIMIT
 
-# fetch performance data via searchanalytics.query for last 28 days
-end_date = datetime.utcnow().date() - timedelta(days=1)
-start_date = end_date - timedelta(days=27)
-req = {
-    'startDate': start_date.isoformat(),
-    'endDate': end_date.isoformat(),
-    'dimensions': ['page','query','device','country'],
-    'rowLimit': 25000,
-}
 
-try:
-    resp = webmasters.searchanalytics().query(siteUrl=SITE_URL, body=req).execute()
-except HttpError as he:
-    print('API error fetching performance data:', str(he))
-    sys.exit(6)
+def write_csv(path: Path, first_column: str, aggregate: dict, limit: int | None = None) -> None:
+    ordered = sorted(
+        aggregate.items(), key=lambda item: item[1]["impressions"], reverse=True
+    )
+    if limit is not None:
+        ordered = ordered[:limit]
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow([first_column, "点击次数", "展示", "点击率", "排名"])
+        for key, values in ordered:
+            writer.writerow(
+                [key, int(values["clicks"]), int(values["impressions"]),
+                 f'{values["ctr"]:.4f}', f'{values["position"]:.2f}']
+            )
 
-rows = resp.get('rows', [])
-print(f"Fetched {len(rows)} rows from Search Console (date range {start_date} to {end_date})")
 
-# prepare output dir
-out_dir = OUT_BASE / f'Performance-on-Search-{datetime.utcnow().date().isoformat()}'
-out_dir.mkdir(parents=True, exist_ok=True)
+def write_report(path: Path, site_url: str, start_date, end_date, row_count: int,
+                 page_data: dict, query_data: dict) -> None:
+    with path.open("w", encoding="utf-8") as handle:
+        handle.write(f"Search Console report for {site_url}\n")
+        handle.write(f"Date range: {start_date} to {end_date}\n")
+        handle.write(f"Rows fetched: {row_count}\n\n")
+        for heading, data in (("Top 20 pages by impressions", page_data),
+                              ("Top 20 queries by impressions", query_data)):
+            handle.write(f"{heading}:\n")
+            for key, values in sorted(
+                data.items(), key=lambda item: item[1]["impressions"], reverse=True
+            )[:20]:
+                handle.write(
+                    f'{key} — impressions={values["impressions"]:.0f} '
+                    f'clicks={values["clicks"]:.0f} ctr={values["ctr"]:.2%} '
+                    f'avg_pos={values["position"]:.2f}\n'
+                )
+            handle.write("\n")
 
-# write a simple CSV of page-level aggregates and queries
-import csv
-page_csv = out_dir / '网页.csv'
-query_csv = out_dir / '查询数.csv'
 
-# aggregate by page and query
-from collections import defaultdict
-page_acc = defaultdict(lambda: {'clicks':0,'impressions':0,'ctr_sum':0,'position_sum':0,'count':0})
-query_acc = defaultdict(lambda: {'clicks':0,'impressions':0,'ctr_sum':0,'position_sum':0,'count':0})
+def print_install_help() -> None:
+    print("ERROR: required Google client libraries are not installed.")
+    print("Install google-auth, google-auth-httplib2, and google-api-python-client, then rerun.")
 
-for r in rows:
-    keys = r.get('keys', [])
-    clicks = r.get('clicks', 0)
-    impr = r.get('impressions', 0)
-    ctr = r.get('ctr', 0.0)
-    pos = r.get('position', 0.0)
-    page = keys[0] if len(keys)>0 else ''
-    query = keys[1] if len(keys)>1 else ''
 
-    if page:
-        a = page_acc[page]
-        a['clicks'] += clicks
-        a['impressions'] += impr
-        a['ctr_sum'] += ctr
-        a['position_sum'] += pos
-        a['count'] += 1
-    if query:
-        b = query_acc[query]
-        b['clicks'] += clicks
-        b['impressions'] += impr
-        b['ctr_sum'] += ctr
-        b['position_sum'] += pos
-        b['count'] += 1
+def main() -> int:
+    keypath = Path(os.path.expanduser(os.environ.get(
+        "GSC_CREDENTIALS_FILE",
+        "~/.hermes/profiles/adsense/credentials/searchconsole-service-account.json",
+    )))
+    output_base = Path(os.environ.get(
+        "GSC_OUTPUT_DIR", Path(__file__).resolve().parents[1] / "Performance"
+    ))
+    requested_property = os.environ.get("GSC_SITE_URL", DEFAULT_PROPERTY)
 
-with open(page_csv, 'w', newline='', encoding='utf-8') as fh:
-    w = csv.writer(fh)
-    w.writerow(['排名靠前的网页','点击次数','展示','点击率','排名'])
-    for p, v in sorted(page_acc.items(), key=lambda x: x[1]['impressions'], reverse=True):
-        avg_ctr = v['ctr_sum']/v['count'] if v['count'] else 0
-        avg_pos = v['position_sum']/v['count'] if v['count'] else 0
-        w.writerow([p, int(v['clicks']), int(v['impressions']), f"{avg_ctr:.4f}", f"{avg_pos:.2f}"])
+    if not keypath.exists() or keypath.stat().st_size == 0:
+        print(f"Search Console credential file is missing or empty: {keypath}")
+        return 3
+    try:
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+        from googleapiclient.errors import HttpError
+    except ImportError:
+        print_install_help()
+        return 2
 
-with open(query_csv, 'w', newline='', encoding='utf-8') as fh:
-    w = csv.writer(fh)
-    w.writerow(['热门查询','点击次数','展示','点击率','排名'])
-    for q, v in sorted(query_acc.items(), key=lambda x: x[1]['impressions'], reverse=True)[:200]:
-        avg_ctr = v['ctr_sum']/v['count'] if v['count'] else 0
-        avg_pos = v['position_sum']/v['count'] if v['count'] else 0
-        w.writerow([q, int(v['clicks']), int(v['impressions']), f"{avg_ctr:.4f}", f"{avg_pos:.2f}"])
+    credentials = service_account.Credentials.from_service_account_file(keypath, scopes=SCOPES)
+    webmasters = build("webmasters", "v3", credentials=credentials)
+    try:
+        site_entries = webmasters.sites().list().execute().get("siteEntry", [])
+    except HttpError as error:
+        print("API error listing sites:", error)
+        print("Add the service-account email in Search Console Users and permissions.")
+        return 4
 
-# write a brief report
-report = out_dir / 'report.txt'
-with open(report, 'w', encoding='utf-8') as fh:
-    fh.write(f"Search Console report for {SITE_URL}\n")
-    fh.write(f"Date range: {start_date} to {end_date}\n")
-    fh.write(f"Rows fetched: {len(rows)}\n\n")
-    fh.write('Top 20 pages by impressions:\n')
-    for p, v in sorted(page_acc.items(), key=lambda x: x[1]['impressions'], reverse=True)[:20]:
-        fh.write(f"{p} — impressions={v['impressions']} clicks={v['clicks']} avg_pos={v['position_sum']/v['count'] if v['count'] else 0:.2f}\n")
-    fh.write('\nTop 20 queries by impressions:\n')
-    for q, v in sorted(query_acc.items(), key=lambda x: x[1]['impressions'], reverse=True)[:20]:
-        fh.write(f"{q} — impressions={v['impressions']} clicks={v['clicks']} avg_pos={v['position_sum']/v['count'] if v['count'] else 0:.2f}\n")
+    site_url = select_property(site_entries, requested_property)
+    if not site_url:
+        visible = ", ".join(entry.get("siteUrl", "") for entry in site_entries) or "none"
+        print(f"No unique Search Console property matched {requested_property}. Visible: {visible}")
+        return 5
+    print(f"Using Search Console property: {site_url}")
 
-print('\nWrote outputs to:', out_dir)
-print('Files:', page_csv.name, query_csv.name, report.name)
-print('Done.')
+    pacific_today = datetime.now(ZoneInfo("America/Los_Angeles")).date()
+    end_date = pacific_today - timedelta(days=1)
+    start_date = end_date - timedelta(days=27)
+    request = {
+        "startDate": start_date.isoformat(), "endDate": end_date.isoformat(),
+        "dimensions": ["page", "query", "device", "country"],
+        "aggregationType": "auto",
+    }
+    try:
+        rows = fetch_all_rows(webmasters, site_url, request)
+    except HttpError as error:
+        print("API error fetching performance data:", error)
+        return 6
+
+    page_data = aggregate_rows(rows, 0)
+    query_data = aggregate_rows(rows, 1)
+    output_dir = output_base / f"Performance-on-Search-{pacific_today.isoformat()}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    page_csv, query_csv, report = (
+        output_dir / "网页.csv", output_dir / "查询数.csv", output_dir / "report.txt"
+    )
+    write_csv(page_csv, "排名靠前的网页", page_data)
+    write_csv(query_csv, "热门查询", query_data, limit=200)
+    write_report(report, site_url, start_date, end_date, len(rows), page_data, query_data)
+    print(f"Fetched {len(rows)} rows ({start_date} to {end_date})")
+    print("Wrote:", page_csv, query_csv, report)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
