@@ -403,6 +403,34 @@ try:
             errors.append(
                 f"vercel.json: missing or incorrect security header {key}={expected}"
             )
+    redirects = vercel_config.get("redirects", [])
+    redirect_sources = [redirect.get("source") for redirect in redirects]
+    if len(redirect_sources) != len(set(redirect_sources)):
+        errors.append("vercel.json: duplicate redirect source")
+    redirect_source_set = set(redirect_sources)
+    for redirect in redirects:
+        source = redirect.get("source", "")
+        destination = redirect.get("destination", "")
+        if not source.startswith("/") or not destination.startswith("/"):
+            errors.append("vercel.json: redirects must use root-relative paths")
+            continue
+        if redirect.get("permanent") is not True:
+            errors.append(f"vercel.json: historical redirect is not permanent {source}")
+        source_url = f"https://dishwashercarehub.com{source.rstrip('/')}/"
+        destination_url = f"https://dishwashercarehub.com{destination.rstrip('/')}/"
+        if source_url in canonical_pages:
+            errors.append(f"vercel.json: redirect source is also a canonical page {source}")
+        if destination_url not in canonical_pages:
+            errors.append(f"vercel.json: redirect destination is not canonical {destination}")
+        if destination in redirect_source_set:
+            errors.append(f"vercel.json: redirect chain begins at {source}")
+    expected_historical_redirect = (
+        "/articles/dishwasher-dishes-still-wet-after-heated-dry/"
+    )
+    if redirect_sources.count(expected_historical_redirect) != 1:
+        errors.append(
+            "vercel.json: missing historical redirect for removed drying article"
+        )
 except (json.JSONDecodeError, OSError) as error:
     errors.append(f"vercel.json: invalid or unreadable JSON ({error})")
 

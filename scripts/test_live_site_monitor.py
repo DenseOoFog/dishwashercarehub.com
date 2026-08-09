@@ -9,6 +9,7 @@ from check_live_site import (
     Response,
     sitemap_urls,
     validate_html_page,
+    validate_redirect,
 )
 
 
@@ -72,6 +73,25 @@ class LiveSiteMonitorTests(unittest.TestCase):
         self.assertTrue(any("noindex" in value for value in parser.robots_values))
         self.assertEqual(parser.canonicals, [])
         self.assertEqual(parser.adsense_scripts, 0)
+
+    def test_permanent_redirect_accepts_relative_location(self):
+        source = "https://dishwashercarehub.com/articles/old/"
+        destination = "https://dishwashercarehub.com/articles/new/"
+        redirect_headers = headers("text/plain")
+        redirect_headers["Location"] = "/articles/new/"
+        response = Response(source, source, 308, redirect_headers, "")
+        self.assertEqual(validate_redirect(response, source, destination), [])
+
+    def test_redirect_rejects_temporary_or_wrong_destination(self):
+        source = "https://dishwashercarehub.com/articles/old/"
+        redirect_headers = headers("text/plain")
+        redirect_headers["Location"] = "/wrong/"
+        response = Response(source, source, 307, redirect_headers, "")
+        errors = validate_redirect(
+            response, source, "https://dishwashercarehub.com/articles/new/"
+        )
+        self.assertTrue(any("permanent" in error for error in errors))
+        self.assertTrue(any("expected redirect" in error for error in errors))
 
 
 if __name__ == "__main__":

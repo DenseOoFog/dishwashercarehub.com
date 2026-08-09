@@ -4,14 +4,18 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from html.parser import HTMLParser
+from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.parse import urljoin
+from urllib.request import HTTPSHandler, HTTPRedirectHandler, Request, build_opener, urlopen
+import json
 import sys
 import ssl
 import time
 import xml.etree.ElementTree as ET
 
 BASE_URL = "https://dishwashercarehub.com"
+ROOT = Path(__file__).resolve().parents[1]
 SITEMAP_URL = f"{BASE_URL}/sitemap.xml"
 ADSENSE_SCRIPT_URL = (
     "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?"
@@ -32,6 +36,14 @@ def tls_context():
 
 
 TLS_CONTEXT = tls_context()
+
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, file_pointer, code, message, headers, new_url):
+        return None
+
+
+NO_REDIRECT_OPENER = build_opener(NoRedirect(), HTTPSHandler(context=TLS_CONTEXT))
 
 
 @dataclass
@@ -61,7 +73,7 @@ class PageParser(HTMLParser):
             self.adsense_scripts += 1
 
 
-def fetch(url, attempts=2, timeout=20):
+def fetch(url, attempts=2, timeout=20, follow_redirects=True):
     last_error = None
     for attempt in range(attempts):
         request = Request(
@@ -69,7 +81,11 @@ def fetch(url, attempts=2, timeout=20):
             headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
         )
         try:
-            with urlopen(request, timeout=timeout, context=TLS_CONTEXT) as response:
+            if follow_redirects:
+                response_context = urlopen(request, timeout=timeout, context=TLS_CONTEXT)
+            else:
+                response_context = NO_REDIRECT_OPENER.open(request, timeout=timeout)
+            with response_context as response:
                 body = response.read().decode("utf-8", errors="replace")
                 result = Response(
                     requested_url=url,
@@ -120,6 +136,20 @@ def validate_html_page(response, expected_url):
         )
     if any("noindex" in value for value in parser.robots_values):
         errors.append(f"{expected_url}: page unexpectedly contains noindex")
+    return errors
+
+
+def validate_redirect(response, source_url, destination_url):
+    errors = []
+    if response.status not in {301, 308}:
+        errors.append(
+            f"{source_url}: expected a permanent redirect, got HTTP {response.status}"
+        )
+    resolved_location = urljoin(source_url, response.headers.get("Location", ""))
+    if resolved_location != destination_url:
+        errors.append(
+            f"{source_url}: expected redirect to {destination_url}, got {resolved_location or 'no Location header'}"
+        )
     return errors
 
 
@@ -214,6 +244,22 @@ def main():
     if missing_parser.adsense_scripts:
         errors.append("custom 404 page must not load the AdSense publisher script")
 
+    try:
+        vercel_config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        errors.append(f"cannot read redirect configuration: {error}")
+        vercel_config = {}
+    for redirect in vercel_config.get("redirects", []):
+        source_url = urljoin(f"{BASE_URL}/", redirect.get("source", ""))
+        destination_url = urljoin(f"{BASE_URL}/", redirect.get("destination", ""))
+        try:
+            redirect_response = fetch(source_url, follow_redirects=False)
+            errors.extend(
+                validate_redirect(redirect_response, source_url, destination_url)
+            )
+        except RuntimeError as error:
+            errors.append(str(error))
+
     if errors:
         print("Live site monitor failed:")
         print("\n".join(f"- {error}" for error in sorted(errors)))
@@ -221,7 +267,7 @@ def main():
     print(
         f"Live site healthy: {len(urls)} canonical pages returned HTML 200 with "
         "matching canonicals and AdSense; robots, sitemap, ads.txt, security headers, "
-        "and HTTP 404 behavior passed."
+        "historical redirects, and HTTP 404 behavior passed."
     )
     return 0
 
