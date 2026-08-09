@@ -29,6 +29,15 @@ ADSENSE_SCRIPT_URL = (
 ADS_TXT_RECORD = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
 ORGANIZATION_ID = "https://dishwashercarehub.com/#organization"
 WEBSITE_ID = "https://dishwashercarehub.com/#website"
+APPROVED_SOURCE_HOSTS = {
+    "media3.bosch-home.com",
+    "producthelp.whirlpool.com",
+    "products.geappliances.com",
+    "www.bosch-home.com",
+    "www.energystar.gov",
+    "www.epa.gov",
+    "www.insinkerator.com",
+}
 BAD_PATTERNS = {
     "repeated line-number prefixes": re.compile(r"^\s*(?:\d+\|\s*){2,}", re.MULTILINE),
     "literal output truncation": re.compile(r"\[truncated\]", re.IGNORECASE),
@@ -364,6 +373,18 @@ for path in HTML_FILES:
         if not external_sources:
             errors.append(
                 f"{path.relative_to(ROOT)}: article has no HTTPS external source link"
+            )
+        unapproved_sources = sorted(
+            {
+                urlparse(link).netloc.lower()
+                for link in external_sources
+                if urlparse(link).netloc.lower() not in APPROVED_SOURCE_HOSTS
+            }
+        )
+        if unapproved_sources:
+            errors.append(
+                f"{path.relative_to(ROOT)}: source host is not approved: "
+                f"{', '.join(unapproved_sources)}"
             )
         article_navigation = {
             urlparse(urljoin(parser.canonical, link)).path
