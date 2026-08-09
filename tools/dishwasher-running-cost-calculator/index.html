@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dishwasher Running Cost Calculator | Dishwasher Care Lab</title>
+  <meta name="description" content="Estimate the electricity, water, monthly, and annual cost of running your dishwasher using your own utility rates and cycle usage.">
+  <link rel="canonical" href="https://dishwashercarehub.com/tools/dishwasher-running-cost-calculator/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Dishwasher Running Cost Calculator","url":"https://dishwashercarehub.com/tools/dishwasher-running-cost-calculator/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+</head>
+<body>
+  <header class="site-header"><div class="header-inner"><strong class="brand-mark">Dishwasher Care Lab</strong><nav><a href="../../">Home</a><a href="../dishwasher-symptom-checker/">Symptom Checker</a><a href="../standing-water-diagnosis/">Standing Water Tool</a><a href="./" aria-current="page">Running Cost</a><a href="../repair-or-replace-calculator/">Repair or Replace</a></nav></div></header>
+  <main class="article-shell tool-shell">
+    <section class="hero-panel article-hero">
+      <p class="eyebrow">Free household calculator</p>
+      <h1>Dishwasher Running Cost Calculator</h1>
+      <p class="summary">Estimate what one load, one month, and one year of dishwasher use costs using the numbers from your utility bill and appliance documentation.</p>
+      <p>No information is uploaded or saved. The calculator separates electricity and water so you can see which assumption changes the result.</p>
+    </section>
+
+    <form id="running-cost-form" class="surface-card tool-form">
+      <div class="tool-grid">
+        <label>Loads per week
+          <input name="loads" type="number" min="0" max="50" step="0.5" value="5" required>
+        </label>
+        <label>Electricity per cycle (kWh)
+          <input name="kwh" type="number" min="0" max="10" step="0.01" value="1.2" required>
+        </label>
+        <label>Electricity rate ($ per kWh)
+          <input name="electricRate" type="number" min="0" max="5" step="0.001" value="0.17" required>
+        </label>
+        <label>Water per cycle (gallons)
+          <input name="gallons" type="number" min="0" max="50" step="0.1" value="4" required>
+        </label>
+        <label>Combined water + sewer ($ per 1,000 gal)
+          <input name="waterRate" type="number" min="0" max="500" step="0.01" value="15" required>
+        </label>
+      </div>
+      <button class="pill-button primary-button tool-submit" type="submit">Calculate my running cost</button>
+    </form>
+
+    <section id="running-cost-result" class="surface-card tool-result" aria-live="polite" tabindex="-1" hidden></section>
+
+    <section class="surface-card article-section">
+      <h2>Where to find accurate inputs</h2>
+      <ul class="checklist">
+        <li><strong>Electricity per cycle:</strong> check the yellow EnergyGuide label, product specification sheet, or owner documentation. Use a plug-in energy meter only if its rating and the appliance installation make that safe.</li>
+        <li><strong>Electricity rate:</strong> divide the electricity portion of a recent bill by billed kWh if your bill does not list an all-in rate.</li>
+        <li><strong>Water per cycle:</strong> use the figure for the cycle you normally select, not the lowest advertised cycle if you rarely use it.</li>
+        <li><strong>Water and sewer rate:</strong> combine usage-based charges and convert the unit to a cost per 1,000 gallons. Leave this at zero if water is included in rent or you only want the marginal electricity cost.</li>
+      </ul>
+    </section>
+
+    <section class="surface-card article-section">
+      <h2>Formula and limits</h2>
+      <p><strong>Cost per load</strong> = (kWh per cycle × electricity rate) + (gallons per cycle ÷ 1,000 × combined water and sewer rate).</p>
+      <p>Monthly and annual figures use 52 weeks per year. They exclude detergent, rinse aid, maintenance, fixed utility fees, and the energy used by a home water heater unless that energy is already reflected in the dishwasher cycle figure. Actual cycle consumption can vary by model, selected options, incoming water temperature, soil sensing, and load.</p>
+    </section>
+
+    <section class="surface-card article-section">
+      <h2>Ways to reduce cost without sacrificing cleaning</h2>
+      <ul>
+        <li>Run full, correctly loaded racks instead of several partial loads.</li>
+        <li>Use the normal or eco cycle when it is appropriate for the load and your owner manual recommends it.</li>
+        <li>Clean the filter and confirm spray arms rotate freely before compensating with repeated cycles.</li>
+        <li>Avoid unnecessary pre-rinsing; scrape large food pieces instead and follow your model's instructions.</li>
+        <li>Compare heated-dry and air-dry results on your own machine before assuming the longest option is always required.</li>
+      </ul>
+      <p>For maintenance problems that make you rerun loads, start with the <a href="../dishwasher-symptom-checker/">dishwasher symptom checker</a>.</p>
+    </section>
+  </main>
+  <footer><p>Independent dishwasher care guidance for homeowners and renters. <span class="footer-links"><a href="/editorial-policy/">Editorial Policy</a> · <a href="/safety/">Safety</a> · <a href="/privacy/">Privacy</a> · <a href="/contact/">Contact</a></span></p></footer>
+  <script src="../../assets/dishwasher-running-cost.js" defer></script>
+  <script src="../../assets/footer-ads-loader.js" defer></script>
+</body>
+</html>
