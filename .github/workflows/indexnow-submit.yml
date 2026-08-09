@@ -1,0 +1,29 @@
+name: IndexNow Submit
+
+on:
+  schedule:
+    - cron: "47 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexnow-submit
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Submit all canonical URLs when manually triggered
+        if: github.event_name == 'workflow_dispatch'
+        run: python scripts/submit_indexnow.py --submit
+      - name: Submit recently modified URLs on the daily schedule
+        if: github.event_name == 'schedule'
+        run: python scripts/submit_indexnow.py --submit --since-days 2

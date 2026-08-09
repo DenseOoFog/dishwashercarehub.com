@@ -22,6 +22,7 @@ ADSENSE_SCRIPT_URL = (
     "client=ca-pub-9156049827002127"
 )
 EXPECTED_ADS_TXT = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
+INDEXNOW_KEY = "3c65545768a3f277e57c54d66b2dacbe"
 USER_AGENT = "DishwasherCareLab-LiveMonitor/1.0 (+https://dishwashercarehub.com/contact/)"
 
 
@@ -273,6 +274,10 @@ def main():
     if ads_txt.status != 200 or ads_lines != [EXPECTED_ADS_TXT]:
         errors.append("ads.txt is unavailable, duplicated, or does not match the publisher ID")
 
+    indexnow_key = fetch(f"{BASE_URL}/{INDEXNOW_KEY}.txt")
+    if indexnow_key.status != 200 or indexnow_key.body.strip() != INDEXNOW_KEY:
+        errors.append("IndexNow ownership key is unavailable or incorrect")
+
     missing = fetch(f"{BASE_URL}/definitely-not-a-real-page-monitor-check/")
     if missing.status != 404:
         errors.append(f"unknown URL should return HTTP 404, got {missing.status}")
@@ -312,7 +317,7 @@ def main():
     print(
         f"Live site healthy: {len(urls)} canonical pages returned HTML 200 with "
         f"matching canonicals and AdSense; Atom feed has {len(feed_urls)} articles; "
-        "robots, sitemap, ads.txt, security headers, "
+        "robots, sitemap, ads.txt, IndexNow ownership, security headers, "
         "historical redirects, and HTTP 404 behavior passed."
     )
     return 0
