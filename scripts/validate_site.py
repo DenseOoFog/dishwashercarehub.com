@@ -378,6 +378,41 @@ expected_ads_txt = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
 if ads_txt_lines != [expected_ads_txt]:
     errors.append("ads.txt: publisher declaration is missing, duplicated, or malformed")
 
+guide_finder_path = ROOT / "tools" / "dishwasher-guide-finder" / "index.html"
+guide_finder_text = guide_finder_path.read_text(encoding="utf-8")
+guide_finder_parser = LinkParser()
+guide_finder_parser.feed(guide_finder_text)
+guide_finder_article_links = {
+    urljoin("https://dishwashercarehub.com/tools/dishwasher-guide-finder/", link)
+    .split("#", 1)[0]
+    .rstrip("/")
+    + "/"
+    for link in guide_finder_parser.anchor_links
+    if "/articles/" in urljoin(
+        "https://dishwashercarehub.com/tools/dishwasher-guide-finder/", link
+    )
+}
+article_canonicals = {
+    canonical_url
+    for canonical_url, record in page_records.items()
+    if record["path"].parent.parent.name == "articles"
+}
+if guide_finder_article_links != article_canonicals:
+    missing = sorted(article_canonicals - guide_finder_article_links)
+    extra = sorted(guide_finder_article_links - article_canonicals)
+    errors.append(
+        "tools/dishwasher-guide-finder/index.html: guide coverage differs from "
+        f"published articles (missing={missing}, extra={extra})"
+    )
+if guide_finder_text.count("data-guide-card") != len(article_canonicals):
+    errors.append(
+        "tools/dishwasher-guide-finder/index.html: expected one searchable card per article"
+    )
+if "../../assets/guide-finder.js" not in guide_finder_text:
+    errors.append(
+        "tools/dishwasher-guide-finder/index.html: search behavior script is missing"
+    )
+
 if errors:
     print("Site validation failed:")
     print("\n".join(f"- {error}" for error in errors))
