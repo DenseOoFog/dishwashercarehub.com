@@ -342,6 +342,15 @@ for path in HTML_FILES:
                 errors.append(
                     f"{path.relative_to(ROOT)}: breadcrumb hierarchy is incomplete or inconsistent"
                 )
+        article_links = {
+            urlparse(urljoin(parser.canonical, link)).path
+            for link in parser.anchor_links
+            if parser.canonical
+        }
+        if not any(link.startswith("/articles/") for link in article_links):
+            errors.append(
+                f"{path.relative_to(ROOT)}: tool has no contextual link to an article"
+            )
     if path.parent.parent.name == "articles":
         external_sources = []
         for link in parser.anchor_links:
@@ -355,6 +364,14 @@ for path in HTML_FILES:
         if not external_sources:
             errors.append(
                 f"{path.relative_to(ROOT)}: article has no HTTPS external source link"
+            )
+        article_navigation = {
+            urlparse(urljoin(parser.canonical, link)).path
+            for link in parser.anchor_links
+        }
+        if "/tools/" not in article_navigation:
+            errors.append(
+                f"{path.relative_to(ROOT)}: article navigation has no All Tools link"
             )
         if not re.search(
             r"<h2>(?:Sources and scope notes|References and fact-check notes)</h2>",
@@ -547,6 +564,23 @@ for canonical_url, record in page_records.items():
     if not incoming_links[canonical_url]:
         errors.append(
             f"{record['path'].relative_to(ROOT)}: orphaned canonical page has no internal link"
+        )
+
+tool_canonical_urls = {
+    canonical_url
+    for canonical_url, record in page_records.items()
+    if record["path"].parent.parent.name == "tools"
+}
+for hub_url in ("https://dishwashercarehub.com/", "https://dishwashercarehub.com/tools/"):
+    hub_record = page_records.get(hub_url)
+    hub_targets = {
+        urlparse(urljoin(hub_url, link))._replace(fragment="").geturl().rstrip("/") + "/"
+        for link in hub_record["links"]
+    } if hub_record else set()
+    for missing_tool in sorted(tool_canonical_urls - hub_targets):
+        errors.append(
+            f"{hub_record['path'].relative_to(ROOT) if hub_record else hub_url}: "
+            f"missing direct tool link {missing_tool}"
         )
 
 sitemap_path = ROOT / "sitemap.xml"
