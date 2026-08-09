@@ -1,0 +1,17 @@
+const assert = require('assert');
+const planner = require('../assets/maintenance-planner.js');
+const regular = planner.buildPlan({ start: '2026-08-09', usage: 'regular', filter: 'manual', hardness: 'unknown', symptom: 'none' });
+assert(regular);
+assert.strictEqual(regular.tasks.find((task) => task.id === 'filter').due, '2026-09-08');
+assert.strictEqual(regular.tasks.find((task) => task.id === 'spray-arms').due, '2026-11-07');
+assert.strictEqual(regular.tasks.find((task) => task.id === 'hardness').due, '2027-02-05');
+const heavy = planner.buildPlan({ start: '2026-12-20', usage: 'heavy', filter: 'manual', hardness: 'hard', symptom: 'drainage' });
+assert.strictEqual(heavy.tasks[0].id, 'symptom');
+assert.strictEqual(heavy.tasks[0].due, '2026-12-20');
+assert.strictEqual(heavy.tasks.find((task) => task.id === 'filter').due, '2027-01-03');
+assert.strictEqual(heavy.tasks.find((task) => task.id === 'hardness').due, '2027-03-20');
+const maintenanceFree = planner.buildPlan({ start: '2028-02-29', usage: 'light', filter: 'maintenance-free', hardness: 'soft', symptom: 'odor' });
+assert.strictEqual(maintenanceFree.tasks.find((task) => task.id === 'filter').due, '2028-05-29');
+assert.strictEqual(planner.validDate('2026-02-30'), null);
+assert.strictEqual(planner.buildPlan({ start: 'bad', usage: 'regular', filter: 'manual', hardness: 'soft', symptom: 'none' }), null);
+console.log('Maintenance planner tests passed.');
