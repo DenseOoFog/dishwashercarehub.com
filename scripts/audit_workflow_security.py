@@ -8,7 +8,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_DIR = ROOT / ".github" / "workflows"
-USES_PATTERN = re.compile(r"^\s*-\s+uses:\s*([^\s#]+)", re.MULTILINE)
+USES_PATTERN = re.compile(r"^\s*(?:-\s+)?uses:\s*([^\s#]+)", re.MULTILINE)
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 APPROVED_OWNERS = {"actions"}
 
@@ -27,12 +27,16 @@ def audit_action_reference(reference: str):
     return None
 
 
+def action_references(text: str):
+    return USES_PATTERN.findall(text)
+
+
 def main():
     errors = []
     references = []
     for workflow in sorted(WORKFLOW_DIR.glob("*.y*ml")):
         text = workflow.read_text(encoding="utf-8")
-        for reference in USES_PATTERN.findall(text):
+        for reference in action_references(text):
             references.append(reference)
             error = audit_action_reference(reference)
             if error:

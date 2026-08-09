@@ -2,7 +2,7 @@
 
 import unittest
 
-from audit_workflow_security import audit_action_reference
+from audit_workflow_security import action_references, audit_action_reference
 
 
 class WorkflowSecurityTests(unittest.TestCase):
@@ -26,6 +26,18 @@ class WorkflowSecurityTests(unittest.TestCase):
 
     def test_local_action_passes(self):
         self.assertIsNone(audit_action_reference("./.github/actions/local"))
+
+    def test_finds_shorthand_and_named_step_references(self):
+        workflow = """
+        steps:
+          - uses: actions/checkout@abc
+          - name: Set up Python
+            uses: actions/setup-python@def # version
+        """
+        self.assertEqual(
+            action_references(workflow),
+            ["actions/checkout@abc", "actions/setup-python@def"],
+        )
 
 
 if __name__ == "__main__":
