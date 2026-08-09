@@ -462,6 +462,25 @@ if "../../assets/guide-finder.js" not in guide_finder_text:
         "tools/dishwasher-guide-finder/index.html: search behavior script is missing"
     )
 
+tool_pages = {
+    canonical_url
+    for canonical_url, record in page_records.items()
+    if record["path"].parent.parent.name == "tools"
+}
+tools_hub_text = (ROOT / "tools" / "index.html").read_text(encoding="utf-8")
+for tool_url in sorted(tool_pages):
+    tool_path = urlparse(tool_url).path
+    if tool_path not in tools_hub_text:
+        errors.append(f"tools/index.html: missing tool listing for {tool_url}")
+homepage_text = (ROOT / "index.html").read_text(encoding="utf-8")
+expected_tool_stat = (
+    f"<strong>{len(tool_pages)}</strong><span>free interactive tools</span>"
+)
+if expected_tool_stat not in homepage_text:
+    errors.append(
+        f"index.html: homepage tool count does not match {len(tool_pages)} published tools"
+    )
+
 if errors:
     print("Site validation failed:")
     print("\n".join(f"- {error}" for error in errors))

@@ -20,3 +20,4 @@ jobs:
       - run: python scripts/test_gsc_fetch.py
       - run: python scripts/test_live_site_monitor.py
       - run: node scripts/test_guide_finder.js
+      - run: node scripts/test_water_hardness_converter.js

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dishwasher Water Hardness Converter &amp; Setup Guide | Dishwasher Care Lab</title>
+  <meta name="description" content="Convert dishwasher water hardness between ppm, mg/L, gpg, °dH, °fH, Clark, and mmol/L, then get safe detergent, rinse-aid, and salt setup checks.">
+
+  <link rel="canonical" href="https://dishwashercarehub.com/tools/dishwasher-water-hardness-converter/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Dishwasher Care Lab">
+  <meta property="og:title" content="Dishwasher Water Hardness Converter &amp; Setup Guide | Dishwasher Care Lab">
+  <meta property="og:description" content="Convert dishwasher water hardness between ppm, mg/L, gpg, °dH, °fH, Clark, and mmol/L, then get safe detergent, rinse-aid, and salt setup checks.">
+  <meta property="og:url" content="https://dishwashercarehub.com/tools/dishwasher-water-hardness-converter/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Dishwasher Water Hardness Converter &amp; Setup Guide | Dishwasher Care Lab">
+  <meta name="twitter:description" content="Convert dishwasher water hardness between ppm, mg/L, gpg, °dH, °fH, Clark, and mmol/L, then get safe detergent, rinse-aid, and salt setup checks.">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Dishwasher Water Hardness Converter and Setup Guide","url":"https://dishwashercarehub.com/tools/dishwasher-water-hardness-converter/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","isAccessibleForFree":true,"description":"Convert household water hardness units and receive model-safe dishwasher setup checks.","provider":{"@type":"Organization","name":"Dishwasher Care Lab","url":"https://dishwashercarehub.com/about/"}}</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9156049827002127" crossorigin="anonymous"></script>
+</head>
+<body>
+  <header class="site-header"><div class="header-inner"><strong class="brand-mark">Dishwasher Care Lab</strong><nav><a href="../../">Home</a><a href="../">All Tools</a><a href="../dishwasher-guide-finder/">Guide Finder</a><a href="../dishwasher-symptom-checker/">Symptom Checker</a><a href="./" aria-current="page">Water Hardness</a><a href="../../about/">About</a></nav></div></header>
+  <main class="article-shell tool-shell">
+    <section class="hero-panel article-hero">
+      <p class="eyebrow">Free conversion and setup tool</p>
+      <h1>Dishwasher Water Hardness Converter</h1>
+      <p class="summary">Turn the number from a water report, test strip, or utility into the units used by your dishwasher manual—and understand which settings to check next.</p>
+      <p>The calculation runs in your browser. Nothing is uploaded or saved, and the tool never invents a model-specific detergent or salt dose.</p>
+    </section>
+
+    <form id="hardness-form" class="surface-card tool-form">
+      <div class="tool-grid">
+        <label>Water hardness value
+          <input name="hardness" type="number" min="0" max="10000" step="0.01" value="120" required inputmode="decimal">
+        </label>
+        <label>Unit shown on your report or test
+          <select name="unit" required>
+            <option value="mgl">mg/L as CaCO₃ or ppm</option>
+            <option value="gpg">grains per U.S. gallon (gpg)</option>
+            <option value="dh">German degrees (°dH)</option>
+            <option value="fh">French degrees (°fH)</option>
+            <option value="clark">Clark / English degrees (°e)</option>
+            <option value="mmol">mmol/L as CaCO₃</option>
+          </select>
+        </label>
+        <label>Main result you want to improve
+          <select name="symptom">
+            <option value="none">No symptom—setting up the machine</option>
+            <option value="white-film">Removable white film or residue</option>
+            <option value="spots">Water spots or droplets</option>
+            <option value="streaks">Colored or rainbow streaks</option>
+            <option value="poor-cleaning">Food or poor cleaning</option>
+          </select>
+        </label>
+      </div>
+      <button class="pill-button primary-button tool-submit" type="submit">Convert hardness and build my checklist</button>
+    </form>
+
+    <section id="hardness-result" class="surface-card tool-result" aria-live="polite" tabindex="-1" hidden></section>
+
+    <section class="surface-card article-section">
+      <h2>Where to find your water hardness</h2>
+      <ul class="checklist">
+        <li>Search your local water utility’s annual water-quality report or hardness page.</li>
+        <li>For a private well or household softener, use a recent laboratory result or a hardness test made for water—not a pool-only interpretation chart.</li>
+        <li>Read the unit beside the result. A value of “10” means very different things in gpg, °dH, and mg/L.</li>
+        <li>If your result lists separate calcium and magnesium instead of total hardness as CaCO₃, do not enter either value alone.</li>
+      </ul>
+    </section>
+
+    <section class="surface-card article-section">
+      <h2>Classification and conversion basis</h2>
+      <p>The U.S. Geological Survey classifies 0–60 mg/L as soft, 61–120 mg/L as moderately hard, 121–180 mg/L as hard, and more than 180 mg/L as very hard, expressed as calcium carbonate. One U.S. grain per gallon is approximately 17.1 mg/L.</p>
+      <p>This calculator uses: 1 gpg = 17.12 mg/L; 1 °dH = 17.848 mg/L; 1 °fH = 10 mg/L; 1 °Clark = 14.254 mg/L; and 1 mmol/L as CaCO₃ = 100.0869 mg/L. Rounded display values may differ slightly from a manual’s conversion table.</p>
+    </section>
+
+    <section class="surface-card article-section">
+      <h2>Sources and scope notes</h2>
+      <ul>
+        <li><a href="https://www.usgs.gov/water-science-school/science/hardness-water" rel="noopener noreferrer">U.S. Geological Survey: Hardness of Water</a> — hardness definition and U.S. classification ranges.</li>
+        <li><a href="https://pubs.usgs.gov/of/1968/0182/report.pdf" rel="noopener noreferrer">U.S. Geological Survey report</a> — grains-per-gallon conversion to mg/L.</li>
+        <li><a href="https://www.bosch-home.com/eg/en/specials/dishwasher-journey/getting-started" rel="noopener noreferrer">Bosch dishwasher setup guidance</a> — model settings, dishwasher salt, rinse aid, detergent, and hard-water limits.</li>
+        <li><a href="https://www.whirlpool.com/blog/kitchen/how-to-use-rinse-aid-in-dishwasher.html" rel="noopener noreferrer">Whirlpool rinse-aid guidance</a> — water spots, drying, hard water, and model-specific instructions.</li>
+      </ul>
+      <p>Classification describes mineral hardness; it is not a health or drinking-water safety rating. Always use the exact hardness table and product instructions supplied for your dishwasher.</p>
+    </section>
+
+    <section class="surface-card article-section">
+      <h2>Related troubleshooting</h2>
+      <p>For visible film, compare the <a href="../../articles/dishwasher-white-residue-on-dishes/">white residue guide</a> and <a href="../../articles/dishwasher-cloudy-glasses-after-cycle/">cloudy glasses guide</a>. For wet dishes, use the <a href="../../articles/dishwasher-not-drying-dishes-completely/">dishwasher drying guide</a>.</p>
+    </section>
+  </main>
+  <footer><p>Independent dishwasher care guidance for homeowners and renters. <span class="footer-links"><a href="/editorial-policy/">Editorial Policy</a> · <a href="/safety/">Safety</a> · <a href="/privacy/">Privacy</a> · <a href="/contact/">Contact</a></span></p></footer>
+  <script src="../../assets/water-hardness-converter.js" defer></script>
+</body>
+</html>
