@@ -50,6 +50,24 @@ BAD_PATTERNS = {
     "HTML link inside meta description": re.compile(
         r"<meta[^>]+name=[\"']description[\"'][^\n]*<a\b", re.IGNORECASE
     ),
+    "unsafe universal dishwasher cleaning recipe": re.compile(
+        r"two cups of white vinegar|hottest empty cycle|hottest cycle available",
+        re.IGNORECASE,
+    ),
+    "unsafe live temperature check": re.compile(
+        r"opening the door mid-wash|open(?:ing)? (?:a|the) (?:running )?dishwasher "
+        r"to (?:feel|check) (?:the )?water",
+        re.IGNORECASE,
+    ),
+    "unsupported universal water-heater adjustment": re.compile(
+        r"adjust (?:your|the) (?:home )?water heater|"
+        r"keep water temperature between 120 and 140 degrees",
+        re.IGNORECASE,
+    ),
+    "unsupported fixed detergent dose": re.compile(
+        r"about one tablespoon per load",
+        re.IGNORECASE,
+    ),
 }
 
 
