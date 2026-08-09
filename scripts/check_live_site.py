@@ -9,6 +9,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin
 from urllib.request import HTTPSHandler, HTTPRedirectHandler, Request, build_opener, urlopen
 import json
+import re
 import sys
 import ssl
 import time
@@ -28,6 +29,27 @@ REMOVED_BACKUP_URLS = (
     f"{BASE_URL}/articles/dishwasher-cloudy-glasses-after-cycle/index.html.bak",
     f"{BASE_URL}/articles/how-to-clean-dishwasher-filter/index.html.bak",
 )
+SUSPICIOUS_PROBE_URLS = (
+    f"{BASE_URL}/casino/",
+    f"{BASE_URL}/online-casino/",
+    f"{BASE_URL}/wp-login.php",
+    f"{BASE_URL}/wp-admin/",
+    f"{BASE_URL}/.env",
+    f"{BASE_URL}/xmlrpc.php",
+    f"{BASE_URL}/sitemap_index.xml",
+)
+SPAM_PATTERNS = {
+    "casino or betting spam": re.compile(
+        r"\b(?:online\s+casino|casino\s+bonus|sports\s+betting|slot\s+bonus)\b",
+        re.IGNORECASE,
+    ),
+    "pharmaceutical spam": re.compile(
+        r"\b(?:buy\s+(?:viagra|cialis)|cheap\s+(?:viagra|cialis))\b",
+        re.IGNORECASE,
+    ),
+    "Japanese casino spam": re.compile(r"オンラインカジノ|カジノボーナス"),
+    "Chinese gambling spam": re.compile(r"在线赌场|博彩网站|赌场奖金"),
+}
 
 
 def tls_context():
@@ -141,6 +163,34 @@ def validate_html_page(response, expected_url):
         )
     if any("noindex" in value for value in parser.robots_values):
         errors.append(f"{expected_url}: page unexpectedly contains noindex")
+    for label, pattern in SPAM_PATTERNS.items():
+        if pattern.search(response.body):
+            errors.append(f"{expected_url}: detected {label}")
+    return errors
+
+
+def validate_suspicious_probe(response, expected_url):
+    """A known attack or spam route must never resolve to indexable site content."""
+    errors = []
+    if response.status not in {403, 404, 410}:
+        errors.append(
+            f"{expected_url}: suspicious probe should be rejected, got HTTP {response.status}"
+        )
+    if response.final_url.rstrip("/") != expected_url.rstrip("/"):
+        errors.append(
+            f"{expected_url}: suspicious probe redirected to {response.final_url}"
+        )
+    if response.status in {404, 410} and response.headers.get(
+        "Content-Type", ""
+    ).lower().startswith("text/html"):
+        parser = PageParser()
+        parser.feed(response.body)
+        if not any("noindex" in value for value in parser.robots_values):
+            errors.append(f"{expected_url}: rejected HTML response is missing noindex")
+        if parser.canonicals:
+            errors.append(f"{expected_url}: rejected HTML response declares a canonical")
+        if parser.adsense_scripts:
+            errors.append(f"{expected_url}: rejected HTML response loads AdSense")
     return errors
 
 
@@ -306,6 +356,13 @@ def main():
                 f"{backup_response.status}: {backup_url}"
             )
 
+    for probe_url in SUSPICIOUS_PROBE_URLS:
+        try:
+            probe_response = fetch(probe_url)
+            errors.extend(validate_suspicious_probe(probe_response, probe_url))
+        except RuntimeError as error:
+            errors.append(str(error))
+
     try:
         vercel_config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
@@ -330,7 +387,8 @@ def main():
         f"Live site healthy: {len(urls)} canonical pages returned HTML 200 with "
         f"matching canonicals and AdSense; Atom feed has {len(feed_urls)} articles; "
         "robots, sitemap, ads.txt, IndexNow ownership, security headers, "
-        "historical redirects, removed backup URLs, and HTTP 404 behavior passed."
+        "historical redirects, removed backup URLs, suspicious-route probes, spam "
+        "content scanning, and HTTP 404 behavior passed."
     )
     return 0
 

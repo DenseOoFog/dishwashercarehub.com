@@ -11,6 +11,7 @@ from check_live_site import (
     sitemap_urls,
     validate_html_page,
     validate_redirect,
+    validate_suspicious_probe,
 )
 
 
@@ -41,6 +42,39 @@ class LiveSiteMonitorTests(unittest.TestCase):
         self.assertTrue(any("matching canonical" in error for error in errors))
         self.assertTrue(any("AdSense" in error for error in errors))
         self.assertTrue(any("noindex" in error for error in errors))
+
+    def test_published_page_rejects_injected_spam_copy(self):
+        url = "https://dishwashercarehub.com/tools/"
+        body = (
+            f'<link rel="canonical" href="{url}">'
+            f'<script src="{ADSENSE_SCRIPT_URL}"></script>'
+            '<p>Claim an online casino bonus today.</p>'
+        )
+        response = Response(url, url, 200, headers("text/html"), body)
+        self.assertTrue(any("casino or betting spam" in error for error in validate_html_page(response, url)))
+
+    def test_suspicious_probe_accepts_protected_or_noindexed_missing_routes(self):
+        protected_url = "https://dishwashercarehub.com/wp-login.php"
+        protected = Response(protected_url, protected_url, 403, headers("text/html"), "forbidden")
+        self.assertEqual(validate_suspicious_probe(protected, protected_url), [])
+
+        missing_url = "https://dishwashercarehub.com/casino/"
+        missing = Response(
+            missing_url,
+            missing_url,
+            404,
+            headers("text/html"),
+            '<meta name="robots" content="noindex, follow">',
+        )
+        self.assertEqual(validate_suspicious_probe(missing, missing_url), [])
+
+    def test_suspicious_probe_rejects_live_or_redirected_content(self):
+        url = "https://dishwashercarehub.com/casino/"
+        live = Response(url, url, 200, headers("text/html"), "live")
+        self.assertTrue(any("should be rejected" in error for error in validate_suspicious_probe(live, url)))
+        redirected = Response(url, "https://dishwashercarehub.com/", 404, headers("text/html"), "")
+        errors = validate_suspicious_probe(redirected, url)
+        self.assertTrue(any("redirected" in error for error in errors))
 
     def test_sitemap_requires_unique_canonical_domain_urls(self):
         xml = """<?xml version="1.0"?>
