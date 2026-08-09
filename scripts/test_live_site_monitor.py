@@ -7,6 +7,7 @@ from check_live_site import (
     ADSENSE_SCRIPT_URL,
     PageParser,
     Response,
+    atom_entry_urls,
     sitemap_urls,
     validate_html_page,
     validate_redirect,
@@ -92,6 +93,27 @@ class LiveSiteMonitorTests(unittest.TestCase):
         )
         self.assertTrue(any("permanent" in error for error in errors))
         self.assertTrue(any("expected redirect" in error for error in errors))
+
+    def test_atom_feed_returns_unique_entry_ids(self):
+        xml = """<?xml version="1.0"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+          <title>Updates</title>
+          <id>https://dishwashercarehub.com/feed.xml</id>
+          <updated>2026-08-09T00:00:00Z</updated>
+          <link rel="self" type="application/atom+xml" href="https://dishwashercarehub.com/feed.xml" />
+          <entry><title>Guide</title><id>https://dishwashercarehub.com/articles/guide/</id><updated>2026-08-09T00:00:00Z</updated><summary>Summary</summary></entry>
+        </feed>"""
+        response = Response(
+            "https://dishwashercarehub.com/feed.xml",
+            "https://dishwashercarehub.com/feed.xml",
+            200,
+            headers("application/atom+xml"),
+            xml,
+        )
+        self.assertEqual(
+            atom_entry_urls(response),
+            ["https://dishwashercarehub.com/articles/guide/"],
+        )
 
 
 if __name__ == "__main__":

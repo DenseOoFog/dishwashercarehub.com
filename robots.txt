@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://dishwashercarehub.com/sitemap.xml
+Sitemap: https://dishwashercarehub.com/feed.xml

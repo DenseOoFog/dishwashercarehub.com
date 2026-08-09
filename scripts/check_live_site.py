@@ -180,6 +180,39 @@ def sitemap_urls(response):
     return urls
 
 
+def atom_entry_urls(response):
+    if response.status != 200:
+        raise RuntimeError(f"Atom feed returned HTTP {response.status}")
+    content_type = response.headers.get("Content-Type", "").lower()
+    if "xml" not in content_type:
+        raise RuntimeError(f"Atom feed returned unexpected content type {content_type!r}")
+    try:
+        root = ET.fromstring(response.body)
+    except ET.ParseError as error:
+        raise RuntimeError(f"Atom feed XML is invalid: {error}") from error
+    namespace = "{http://www.w3.org/2005/Atom}"
+    if root.tag != f"{namespace}feed":
+        raise RuntimeError("feed.xml is not an Atom 1.0 feed")
+    if not root.findtext(f"{namespace}title", "").strip():
+        raise RuntimeError("Atom feed title is missing")
+    self_links = [
+        link.get("href")
+        for link in root.findall(f"{namespace}link")
+        if link.get("rel") == "self" and link.get("type") == "application/atom+xml"
+    ]
+    if self_links != [f"{BASE_URL}/feed.xml"]:
+        raise RuntimeError("Atom feed self link is missing or incorrect")
+    entry_urls = [
+        entry.findtext(f"{namespace}id", "").strip()
+        for entry in root.findall(f"{namespace}entry")
+    ]
+    if not entry_urls or any(not url for url in entry_urls):
+        raise RuntimeError("Atom feed contains an entry without an id")
+    if len(entry_urls) != len(set(entry_urls)):
+        raise RuntimeError("Atom feed contains duplicate entry ids")
+    return entry_urls
+
+
 def main():
     errors = []
 
@@ -189,6 +222,16 @@ def main():
     except RuntimeError as error:
         print(f"Live site monitor failed:\n- {error}")
         return 1
+
+    feed_urls = []
+    try:
+        feed_response = fetch(f"{BASE_URL}/feed.xml")
+        feed_urls = atom_entry_urls(feed_response)
+        article_urls = {url for url in urls if "/articles/" in url}
+        if set(feed_urls) != article_urls or len(feed_urls) != len(article_urls):
+            errors.append("Atom feed entries do not match the published article URLs")
+    except RuntimeError as error:
+        errors.append(str(error))
 
     with ThreadPoolExecutor(max_workers=6) as executor:
         futures = {executor.submit(fetch, url): url for url in urls}
@@ -217,6 +260,8 @@ def main():
     robots = fetch(f"{BASE_URL}/robots.txt")
     if robots.status != 200 or f"Sitemap: {SITEMAP_URL}" not in robots.body:
         errors.append("robots.txt is unavailable or does not declare the canonical sitemap")
+    if f"Sitemap: {BASE_URL}/feed.xml" not in robots.body:
+        errors.append("robots.txt does not declare the Atom feed")
     if any(
         line.lower().startswith("disallow:") and line.split(":", 1)[1].strip()
         for line in robots.body.splitlines()
@@ -266,7 +311,8 @@ def main():
         return 1
     print(
         f"Live site healthy: {len(urls)} canonical pages returned HTML 200 with "
-        "matching canonicals and AdSense; robots, sitemap, ads.txt, security headers, "
+        f"matching canonicals and AdSense; Atom feed has {len(feed_urls)} articles; "
+        "robots, sitemap, ads.txt, security headers, "
         "historical redirects, and HTTP 404 behavior passed."
     )
     return 0

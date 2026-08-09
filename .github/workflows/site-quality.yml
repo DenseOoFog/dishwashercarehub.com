@@ -17,6 +17,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: python scripts/validate_site.py
+      - run: python scripts/generate_feed.py --check
       - run: python scripts/test_gsc_fetch.py
       - run: python scripts/test_live_site_monitor.py
       - run: node scripts/test_guide_finder.js

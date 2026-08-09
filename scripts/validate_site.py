@@ -48,6 +48,7 @@ class LinkParser(HTMLParser):
         self.links = []
         self.anchor_links = []
         self.canonical = None
+        self.feed_links = []
         self.title_parts = []
         self.meta_description = None
         self.social_meta = defaultdict(list)
@@ -65,6 +66,13 @@ class LinkParser(HTMLParser):
             self.anchor_links.append(values["href"])
         if tag == "link" and "canonical" in values.get("rel", "").lower():
             self.canonical = values.get("href")
+        if (
+            tag == "link"
+            and "alternate" in values.get("rel", "").lower()
+            and values.get("type", "").lower() == "application/atom+xml"
+            and values.get("href")
+        ):
+            self.feed_links.append(values["href"])
         if tag == "title":
             self._in_title = True
         if (
@@ -161,6 +169,7 @@ for path in HTML_FILES:
             "description": parser.meta_description or "",
             "links": parser.anchor_links,
             "social_meta": parser.social_meta,
+            "feed_links": parser.feed_links,
         }
     if path.parent.parent.name == "articles" and parser.canonical:
         canonical = parser.canonical.rstrip("/")
@@ -225,6 +234,7 @@ for path in HTML_FILES:
             )
         if len(meta_matches) == 1:
             canonical_url = parser.canonical.rstrip("/") + "/"
+            page_records[canonical_url]["article_published"] = meta_matches[0][0]
             page_records[canonical_url]["article_modified"] = meta_matches[0][1]
         article_objects = [
             item
@@ -298,6 +308,10 @@ for canonical_url, record in page_records.items():
             errors.append(
                 f"{path.relative_to(ROOT)}: expected one {name} matching page metadata"
             )
+    if record["feed_links"] != ["https://dishwashercarehub.com/feed.xml"]:
+        errors.append(
+            f"{path.relative_to(ROOT)}: expected one canonical Atom feed discovery link"
+        )
 
 incoming_links = defaultdict(set)
 for source_url, record in page_records.items():
@@ -370,6 +384,9 @@ try:
     expected_sitemap_directive = "Sitemap: https://dishwashercarehub.com/sitemap.xml"
     if robots_lines.count(expected_sitemap_directive) != 1:
         errors.append("robots.txt: expected one absolute sitemap directive")
+    expected_feed_directive = "Sitemap: https://dishwashercarehub.com/feed.xml"
+    if robots_lines.count(expected_feed_directive) != 1:
+        errors.append("robots.txt: expected one absolute Atom feed directive")
     blocking_rules = [
         line for line in robots_lines if line.lower().startswith("disallow:")
         and line.split(":", 1)[1].strip()
@@ -378,6 +395,55 @@ try:
         errors.append(f"robots.txt: unexpected crawl blocking rules {blocking_rules}")
 except OSError as error:
     errors.append(f"robots.txt: unreadable ({error})")
+
+feed_path = ROOT / "feed.xml"
+try:
+    feed_root = ET.parse(feed_path).getroot()
+    atom_namespace = "{http://www.w3.org/2005/Atom}"
+    if feed_root.tag != f"{atom_namespace}feed":
+        errors.append("feed.xml: root element is not Atom 1.0 feed")
+    feed_id = feed_root.findtext(f"{atom_namespace}id", "").strip()
+    feed_title = feed_root.findtext(f"{atom_namespace}title", "").strip()
+    feed_updated = feed_root.findtext(f"{atom_namespace}updated", "").strip()
+    if feed_id != "https://dishwashercarehub.com/feed.xml":
+        errors.append("feed.xml: feed id does not match canonical feed URL")
+    if not feed_title or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T00:00:00Z", feed_updated):
+        errors.append("feed.xml: missing title or RFC 3339 updated timestamp")
+    feed_self_links = [
+        link.get("href")
+        for link in feed_root.findall(f"{atom_namespace}link")
+        if link.get("rel") == "self" and link.get("type") == "application/atom+xml"
+    ]
+    if feed_self_links != ["https://dishwashercarehub.com/feed.xml"]:
+        errors.append("feed.xml: expected one canonical self link")
+    feed_entries = feed_root.findall(f"{atom_namespace}entry")
+    feed_entry_ids = []
+    for entry in feed_entries:
+        entry_id = entry.findtext(f"{atom_namespace}id", "").strip()
+        feed_entry_ids.append(entry_id)
+        record = page_records.get(entry_id.rstrip("/") + "/")
+        if not record or "article_published" not in record:
+            errors.append(f"feed.xml: entry is not a published article {entry_id}")
+            continue
+        expected_published = f"{record['article_published']}T00:00:00Z"
+        expected_modified = f"{record['article_modified']}T00:00:00Z"
+        if entry.findtext(f"{atom_namespace}published", "").strip() != expected_published:
+            errors.append(f"feed.xml: publication date mismatch for {entry_id}")
+        if entry.findtext(f"{atom_namespace}updated", "").strip() != expected_modified:
+            errors.append(f"feed.xml: update date mismatch for {entry_id}")
+        if not entry.findtext(f"{atom_namespace}title", "").strip():
+            errors.append(f"feed.xml: missing title for {entry_id}")
+        if not entry.findtext(f"{atom_namespace}summary", "").strip():
+            errors.append(f"feed.xml: missing summary for {entry_id}")
+    article_urls = {
+        canonical_url
+        for canonical_url, record in page_records.items()
+        if "article_published" in record
+    }
+    if set(feed_entry_ids) != article_urls or len(feed_entry_ids) != len(article_urls):
+        errors.append("feed.xml: entries do not exactly match published articles")
+except (ET.ParseError, OSError) as error:
+    errors.append(f"feed.xml: invalid or unreadable Atom XML ({error})")
 
 vercel_path = ROOT / "vercel.json"
 required_security_headers = {
