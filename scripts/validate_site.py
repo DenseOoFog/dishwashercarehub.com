@@ -5,6 +5,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 from collections import defaultdict
+from datetime import date
 import json
 import re
 import sys
@@ -222,6 +223,9 @@ for path in HTML_FILES:
             errors.append(
                 f"{path.relative_to(ROOT)}: article:modified_time must match the visible date"
             )
+        if len(meta_matches) == 1:
+            canonical_url = parser.canonical.rstrip("/") + "/"
+            page_records[canonical_url]["article_modified"] = meta_matches[0][1]
         article_objects = [
             item
             for item in structured_objects
@@ -315,20 +319,65 @@ for canonical_url, record in page_records.items():
 sitemap_path = ROOT / "sitemap.xml"
 try:
     sitemap_root = ET.parse(sitemap_path).getroot()
-    sitemap_urls = {
-        element.text.strip().rstrip("/") + "/"
-        for element in sitemap_root.findall(
-            "{http://www.sitemaps.org/schemas/sitemap/0.9}url/"
-            "{http://www.sitemaps.org/schemas/sitemap/0.9}loc"
-        )
-        if element.text and element.text.strip()
-    }
+    sitemap_namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    sitemap_urls = set()
+    sitemap_lastmods = {}
+    for url_element in sitemap_root.findall(f"{sitemap_namespace}url"):
+        loc_elements = url_element.findall(f"{sitemap_namespace}loc")
+        lastmod_elements = url_element.findall(f"{sitemap_namespace}lastmod")
+        if len(loc_elements) != 1 or not loc_elements[0].text:
+            errors.append("sitemap.xml: each URL requires exactly one non-empty loc")
+            continue
+        sitemap_url = loc_elements[0].text.strip().rstrip("/") + "/"
+        if sitemap_url in sitemap_urls:
+            errors.append(f"sitemap.xml: duplicate URL {sitemap_url}")
+        sitemap_urls.add(sitemap_url)
+        if len(lastmod_elements) != 1 or not lastmod_elements[0].text:
+            errors.append(f"sitemap.xml: {sitemap_url} requires exactly one lastmod")
+            continue
+        lastmod_text = lastmod_elements[0].text.strip()
+        try:
+            lastmod_date = date.fromisoformat(lastmod_text)
+            if lastmod_text != lastmod_date.isoformat():
+                raise ValueError
+            if lastmod_date > date.today():
+                errors.append(f"sitemap.xml: future lastmod for {sitemap_url}")
+        except ValueError:
+            errors.append(
+                f"sitemap.xml: invalid YYYY-MM-DD lastmod for {sitemap_url}"
+            )
+        sitemap_lastmods[sitemap_url] = lastmod_text
     for url in sorted(canonical_pages - sitemap_urls):
         errors.append(f"sitemap.xml: missing canonical page {url}")
     for url in sorted(sitemap_urls - canonical_pages):
         errors.append(f"sitemap.xml: URL has no canonical index page {url}")
+    for canonical_url, record in page_records.items():
+        article_modified = record.get("article_modified")
+        if article_modified and sitemap_lastmods.get(canonical_url) != article_modified:
+            errors.append(
+                f"sitemap.xml: {canonical_url} lastmod does not match article update date"
+            )
 except (ET.ParseError, OSError) as error:
     errors.append(f"sitemap.xml: invalid or unreadable XML ({error})")
+
+robots_path = ROOT / "robots.txt"
+try:
+    robots_lines = [
+        line.strip()
+        for line in robots_path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    expected_sitemap_directive = "Sitemap: https://dishwashercarehub.com/sitemap.xml"
+    if robots_lines.count(expected_sitemap_directive) != 1:
+        errors.append("robots.txt: expected one absolute sitemap directive")
+    blocking_rules = [
+        line for line in robots_lines if line.lower().startswith("disallow:")
+        and line.split(":", 1)[1].strip()
+    ]
+    if blocking_rules:
+        errors.append(f"robots.txt: unexpected crawl blocking rules {blocking_rules}")
+except OSError as error:
+    errors.append(f"robots.txt: unreadable ({error})")
 
 vercel_path = ROOT / "vercel.json"
 required_security_headers = {
