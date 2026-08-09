@@ -4,6 +4,7 @@
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
+from collections import defaultdict
 import json
 import re
 import sys
@@ -37,8 +38,11 @@ class LinkParser(HTMLParser):
         self.links = []
         self.anchor_links = []
         self.canonical = None
+        self.title_parts = []
+        self.meta_description = None
         self.json_ld = []
         self._json_buffer = None
+        self._in_title = False
 
     def handle_starttag(self, tag, attrs):
         values = dict(attrs)
@@ -50,14 +54,26 @@ class LinkParser(HTMLParser):
             self.anchor_links.append(values["href"])
         if tag == "link" and "canonical" in values.get("rel", "").lower():
             self.canonical = values.get("href")
+        if tag == "title":
+            self._in_title = True
+        if (
+            tag == "meta"
+            and values.get("name", "").lower() == "description"
+            and values.get("content")
+        ):
+            self.meta_description = values["content"].strip()
         if tag == "script" and values.get("type") == "application/ld+json":
             self._json_buffer = []
 
     def handle_data(self, data):
+        if self._in_title:
+            self.title_parts.append(data)
         if self._json_buffer is not None:
             self._json_buffer.append(data)
 
     def handle_endtag(self, tag):
+        if tag == "title":
+            self._in_title = False
         if tag == "script" and self._json_buffer is not None:
             self.json_ld.append("".join(self._json_buffer))
             self._json_buffer = None
@@ -78,6 +94,7 @@ def local_target(source: Path, value: str):
 
 errors = []
 canonical_pages = set()
+page_records = {}
 for path in HTML_FILES:
     text = path.read_text(encoding="utf-8")
     if path.name == "index.html":
@@ -94,7 +111,19 @@ for path in HTML_FILES:
     parser = LinkParser()
     parser.feed(text)
     if path.name == "index.html" and parser.canonical:
-        canonical_pages.add(parser.canonical.rstrip("/") + "/")
+        canonical_url = parser.canonical.rstrip("/") + "/"
+        canonical_pages.add(canonical_url)
+        if canonical_url in page_records:
+            errors.append(
+                f"{path.relative_to(ROOT)}: duplicate canonical also used by "
+                f"{page_records[canonical_url]['path'].relative_to(ROOT)}"
+            )
+        page_records[canonical_url] = {
+            "path": path,
+            "title": "".join(parser.title_parts).strip(),
+            "description": parser.meta_description or "",
+            "links": parser.anchor_links,
+        }
     if path.parent.parent.name == "articles" and parser.canonical:
         canonical = parser.canonical.rstrip("/")
         for link in parser.anchor_links:
@@ -164,6 +193,37 @@ for path in HTML_FILES:
         target = local_target(path, link)
         if target and not target.exists():
             errors.append(f"{path.relative_to(ROOT)}: broken local link {link}")
+
+for field in ("title", "description"):
+    values = defaultdict(list)
+    for canonical_url, record in page_records.items():
+        if not record[field]:
+            errors.append(
+                f"{record['path'].relative_to(ROOT)}: missing {field}"
+            )
+        else:
+            values[record[field]].append(record["path"])
+    for value, paths in values.items():
+        if len(paths) > 1:
+            joined_paths = ", ".join(str(path.relative_to(ROOT)) for path in paths)
+            errors.append(f"duplicate {field} across pages: {value!r} ({joined_paths})")
+
+incoming_links = defaultdict(set)
+for source_url, record in page_records.items():
+    for link in record["links"]:
+        resolved = urlparse(urljoin(source_url, link))
+        if resolved.scheme not in {"http", "https"} or not resolved.netloc:
+            continue
+        target_url = f"{resolved.scheme}://{resolved.netloc}{resolved.path.rstrip('/')}/"
+        if target_url in page_records and target_url != source_url:
+            incoming_links[target_url].add(source_url)
+for canonical_url, record in page_records.items():
+    if canonical_url == "https://dishwashercarehub.com/":
+        continue
+    if not incoming_links[canonical_url]:
+        errors.append(
+            f"{record['path'].relative_to(ROOT)}: orphaned canonical page has no internal link"
+        )
 
 sitemap_path = ROOT / "sitemap.xml"
 try:
