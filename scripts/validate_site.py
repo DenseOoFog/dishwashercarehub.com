@@ -100,14 +100,66 @@ for path in HTML_FILES:
         for link in parser.anchor_links:
             if urljoin(parser.canonical, link).rstrip("/") == canonical:
                 errors.append(f"{path.relative_to(ROOT)}: self-referential article link {link}")
+    structured_objects = []
     for index, payload in enumerate(parser.json_ld, start=1):
         try:
-            json.loads(payload)
+            parsed_payload = json.loads(payload)
+            if isinstance(parsed_payload, dict) and isinstance(
+                parsed_payload.get("@graph"), list
+            ):
+                structured_objects.extend(parsed_payload["@graph"])
+            else:
+                structured_objects.append(parsed_payload)
         except json.JSONDecodeError as error:
             errors.append(
                 f"{path.relative_to(ROOT)}: invalid JSON-LD block {index} "
                 f"at line {error.lineno}, column {error.colno}"
             )
+    if path.parent.parent.name == "articles":
+        meta_matches = re.findall(
+            r'<p class="article-meta">Published <time datetime="(\d{4}-\d{2}-\d{2})">'
+            r'.+?</time> · Updated <time datetime="(\d{4}-\d{2}-\d{2})">'
+            r'.+?</time> · By <a href="/about/">Dishwasher Care Lab editorial team</a></p>',
+            text,
+        )
+        if len(meta_matches) != 1:
+            errors.append(
+                f"{path.relative_to(ROOT)}: expected one complete visible article byline"
+            )
+        article_objects = [
+            item
+            for item in structured_objects
+            if isinstance(item, dict)
+            and item.get("@type") in {"Article", "BlogPosting", "TechArticle"}
+        ]
+        if len(article_objects) != 1:
+            errors.append(
+                f"{path.relative_to(ROOT)}: expected one Article JSON-LD object"
+            )
+        elif len(meta_matches) == 1:
+            published, modified = meta_matches[0]
+            article_object = article_objects[0]
+            if article_object.get("datePublished") != published:
+                errors.append(
+                    f"{path.relative_to(ROOT)}: visible and structured publication dates differ"
+                )
+            if article_object.get("dateModified") != modified:
+                errors.append(
+                    f"{path.relative_to(ROOT)}: visible and structured update dates differ"
+                )
+            if published > modified:
+                errors.append(
+                    f"{path.relative_to(ROOT)}: publication date is after update date"
+                )
+            expected_author = {
+                "@type": "Organization",
+                "name": "Dishwasher Care Lab",
+                "url": "https://dishwashercarehub.com/about/",
+            }
+            if article_object.get("author") != expected_author:
+                errors.append(
+                    f"{path.relative_to(ROOT)}: structured author does not match visible byline"
+                )
     for link in parser.links:
         target = local_target(path, link)
         if target and not target.exists():

@@ -144,6 +144,12 @@ main {
   margin-top: 1.25rem;
 }
 .article-callouts { margin-top: 1rem; }
+.article-meta {
+  margin: 0.85rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+.article-meta a { font-weight: 700; }
 .mini-stat, .mini-card {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
