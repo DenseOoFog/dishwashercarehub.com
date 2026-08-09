@@ -46,6 +46,11 @@ UNIVERSAL_RECIPE_PATTERNS = {
         r"hold(?:ing)? .+? for 3 to 5 seconds)\b",
         re.IGNORECASE,
     ),
+    "unsupported certainty or ranking": re.compile(
+        r"\b(?:almost always|single most common|most common cause|"
+        r"at least 120 degrees Fahrenheit)\b",
+        re.IGNORECASE,
+    ),
 }
 
 
