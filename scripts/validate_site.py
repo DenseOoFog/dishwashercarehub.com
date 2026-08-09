@@ -12,6 +12,10 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML_FILES = sorted(ROOT.glob("**/*.html"))
+ADSENSE_SCRIPT_URL = (
+    "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?"
+    "client=ca-pub-9156049827002127"
+)
 BAD_PATTERNS = {
     "repeated line-number prefixes": re.compile(r"^\s*(?:\d+\|\s*){2,}", re.MULTILINE),
     "literal output truncation": re.compile(r"\[truncated\]", re.IGNORECASE),
@@ -110,6 +114,20 @@ for path in HTML_FILES:
                     f"{path.relative_to(ROOT)}: expected {expected} occurrence of "
                     f"{marker}, found {count}"
                 )
+        adsense_count = text.count(ADSENSE_SCRIPT_URL)
+        if adsense_count != 1:
+            errors.append(
+                f"{path.relative_to(ROOT)}: expected one AdSense script, found {adsense_count}"
+            )
+        head_markup = text.split("</head>", 1)[0]
+        if ADSENSE_SCRIPT_URL not in head_markup:
+            errors.append(
+                f"{path.relative_to(ROOT)}: AdSense script is not inside head"
+            )
+        if "footer-ads-loader" in text:
+            errors.append(
+                f"{path.relative_to(ROOT)}: obsolete deferred AdSense loader remains"
+            )
     for label, pattern in BAD_PATTERNS.items():
         if pattern.search(text):
             errors.append(f"{path.relative_to(ROOT)}: {label}")
@@ -294,6 +312,27 @@ try:
             )
 except (json.JSONDecodeError, OSError) as error:
     errors.append(f"vercel.json: invalid or unreadable JSON ({error})")
+
+privacy_text = (ROOT / "privacy" / "index.html").read_text(encoding="utf-8")
+required_privacy_disclosures = {
+    "Google partner data-use link": "https://policies.google.com/technologies/partner-sites",
+    "Google advertising settings": "https://adssettings.google.com/",
+    "third-party advertising opt-out": "https://optout.aboutads.info/",
+    "certified CMP disclosure": "Google-certified consent management platform",
+    "privacy contact": "mailto:pqiswin1@gmail.com",
+}
+for label, required_text in required_privacy_disclosures.items():
+    if required_text not in privacy_text:
+        errors.append(f"privacy/index.html: missing {label}")
+
+ads_txt_lines = [
+    line.strip()
+    for line in (ROOT / "ads.txt").read_text(encoding="utf-8").splitlines()
+    if line.strip()
+]
+expected_ads_txt = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
+if ads_txt_lines != [expected_ads_txt]:
+    errors.append("ads.txt: publisher declaration is missing, duplicated, or malformed")
 
 if errors:
     print("Site validation failed:")
