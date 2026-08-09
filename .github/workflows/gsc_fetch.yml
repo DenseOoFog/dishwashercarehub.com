@@ -16,7 +16,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: python -m pip install --require-hashes --only-binary=:all: -r requirements-gsc.lock
+        run: "python -m pip install --require-hashes --only-binary=:all: -r requirements-gsc.lock"
 
       - name: Restore service account key from secret
         env:
