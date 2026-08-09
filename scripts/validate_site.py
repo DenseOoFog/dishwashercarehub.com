@@ -7,6 +7,7 @@ from urllib.parse import urljoin, urlparse
 import json
 import re
 import sys
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML_FILES = sorted(ROOT.glob("**/*.html"))
@@ -76,6 +77,7 @@ def local_target(source: Path, value: str):
 
 
 errors = []
+canonical_pages = set()
 for path in HTML_FILES:
     text = path.read_text(encoding="utf-8")
     if path.name == "index.html":
@@ -91,6 +93,8 @@ for path in HTML_FILES:
             errors.append(f"{path.relative_to(ROOT)}: {label}")
     parser = LinkParser()
     parser.feed(text)
+    if path.name == "index.html" and parser.canonical:
+        canonical_pages.add(parser.canonical.rstrip("/") + "/")
     if path.parent.parent.name == "articles" and parser.canonical:
         canonical = parser.canonical.rstrip("/")
         for link in parser.anchor_links:
@@ -108,6 +112,24 @@ for path in HTML_FILES:
         target = local_target(path, link)
         if target and not target.exists():
             errors.append(f"{path.relative_to(ROOT)}: broken local link {link}")
+
+sitemap_path = ROOT / "sitemap.xml"
+try:
+    sitemap_root = ET.parse(sitemap_path).getroot()
+    sitemap_urls = {
+        element.text.strip().rstrip("/") + "/"
+        for element in sitemap_root.findall(
+            "{http://www.sitemaps.org/schemas/sitemap/0.9}url/"
+            "{http://www.sitemaps.org/schemas/sitemap/0.9}loc"
+        )
+        if element.text and element.text.strip()
+    }
+    for url in sorted(canonical_pages - sitemap_urls):
+        errors.append(f"sitemap.xml: missing canonical page {url}")
+    for url in sorted(sitemap_urls - canonical_pages):
+        errors.append(f"sitemap.xml: URL has no canonical index page {url}")
+except (ET.ParseError, OSError) as error:
+    errors.append(f"sitemap.xml: invalid or unreadable XML ({error})")
 
 if errors:
     print("Site validation failed:")
