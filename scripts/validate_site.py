@@ -131,6 +131,33 @@ try:
 except (ET.ParseError, OSError) as error:
     errors.append(f"sitemap.xml: invalid or unreadable XML ({error})")
 
+vercel_path = ROOT / "vercel.json"
+required_security_headers = {
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+}
+try:
+    vercel_config = json.loads(vercel_path.read_text(encoding="utf-8"))
+    configured_headers = {}
+    for rule in vercel_config.get("headers", []):
+        if rule.get("source") != "/(.*)":
+            continue
+        configured_headers.update(
+            {
+                header.get("key", "").lower(): header.get("value", "")
+                for header in rule.get("headers", [])
+            }
+        )
+    for key, expected in required_security_headers.items():
+        if configured_headers.get(key) != expected:
+            errors.append(
+                f"vercel.json: missing or incorrect security header {key}={expected}"
+            )
+except (json.JSONDecodeError, OSError) as error:
+    errors.append(f"vercel.json: invalid or unreadable JSON ({error})")
+
 if errors:
     print("Site validation failed:")
     print("\n".join(f"- {error}" for error in errors))
