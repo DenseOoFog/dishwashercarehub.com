@@ -290,6 +290,39 @@ for path in HTML_FILES:
                 errors.append(
                     f"{path.relative_to(ROOT)}: WebApplication requires name and description"
                 )
+        breadcrumb_objects = [
+            item for item in structured_objects
+            if isinstance(item, dict) and item.get("@type") == "BreadcrumbList"
+        ]
+        if len(breadcrumb_objects) != 1:
+            errors.append(
+                f"{path.relative_to(ROOT)}: expected one BreadcrumbList JSON-LD object"
+            )
+        elif len(application_objects) == 1:
+            expected_items = [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://dishwashercarehub.com/",
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "All Tools",
+                    "item": "https://dishwashercarehub.com/tools/",
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": application_objects[0].get("name"),
+                    "item": parser.canonical.rstrip("/") + "/" if parser.canonical else "",
+                },
+            ]
+            if breadcrumb_objects[0].get("itemListElement") != expected_items:
+                errors.append(
+                    f"{path.relative_to(ROOT)}: breadcrumb hierarchy is incomplete or inconsistent"
+                )
     if path.parent.parent.name == "articles":
         external_sources = []
         for link in parser.anchor_links:
