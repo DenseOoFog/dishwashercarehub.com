@@ -49,6 +49,7 @@ class LinkParser(HTMLParser):
         self.canonical = None
         self.title_parts = []
         self.meta_description = None
+        self.social_meta = defaultdict(list)
         self.json_ld = []
         self._json_buffer = None
         self._in_title = False
@@ -71,6 +72,14 @@ class LinkParser(HTMLParser):
             and values.get("content")
         ):
             self.meta_description = values["content"].strip()
+        if tag == "meta" and values.get("content"):
+            property_name = values.get("property", "").lower()
+            meta_name = values.get("name", "").lower()
+            social_name = property_name or (
+                meta_name if meta_name.startswith("twitter:") else ""
+            )
+            if social_name:
+                self.social_meta[social_name].append(values["content"].strip())
         if tag == "script" and values.get("type") == "application/ld+json":
             self._json_buffer = []
 
@@ -150,6 +159,7 @@ for path in HTML_FILES:
             "title": "".join(parser.title_parts).strip(),
             "description": parser.meta_description or "",
             "links": parser.anchor_links,
+            "social_meta": parser.social_meta,
         }
     if path.parent.parent.name == "articles" and parser.canonical:
         canonical = parser.canonical.rstrip("/")
@@ -201,6 +211,16 @@ for path in HTML_FILES:
         if len(meta_matches) != 1:
             errors.append(
                 f"{path.relative_to(ROOT)}: expected one complete visible article byline"
+            )
+        elif parser.social_meta.get("article:published_time") != [meta_matches[0][0]]:
+            errors.append(
+                f"{path.relative_to(ROOT)}: article:published_time must match the visible date"
+            )
+        if len(meta_matches) == 1 and parser.social_meta.get(
+            "article:modified_time"
+        ) != [meta_matches[0][1]]:
+            errors.append(
+                f"{path.relative_to(ROOT)}: article:modified_time must match the visible date"
             )
         article_objects = [
             item
@@ -254,6 +274,26 @@ for field in ("title", "description"):
         if len(paths) > 1:
             joined_paths = ", ".join(str(path.relative_to(ROOT)) for path in paths)
             errors.append(f"duplicate {field} across pages: {value!r} ({joined_paths})")
+
+for canonical_url, record in page_records.items():
+    path = record["path"]
+    social_meta = record["social_meta"]
+    is_article = path.parent.parent.name == "articles"
+    expected_social_meta = {
+        "og:type": "article" if is_article else "website",
+        "og:site_name": "Dishwasher Care Lab",
+        "og:title": record["title"],
+        "og:description": record["description"],
+        "og:url": canonical_url,
+        "twitter:card": "summary",
+        "twitter:title": record["title"],
+        "twitter:description": record["description"],
+    }
+    for name, expected in expected_social_meta.items():
+        if social_meta.get(name) != [expected]:
+            errors.append(
+                f"{path.relative_to(ROOT)}: expected one {name} matching page metadata"
+            )
 
 incoming_links = defaultdict(set)
 for source_url, record in page_records.items():
