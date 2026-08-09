@@ -617,6 +617,20 @@ for canonical_url, record in page_records.items():
         errors.append(
             f"{path.relative_to(ROOT)}: expected one canonical Atom feed discovery link"
         )
+    navigation_paths = {
+        urlparse(urljoin(canonical_url, link)).path.rstrip("/") + "/"
+        for link in record["links"]
+    }
+    for required_path in (
+        "/privacy/",
+        "/contact/",
+        "/editorial-policy/",
+        "/safety/",
+    ):
+        if required_path not in navigation_paths:
+            errors.append(
+                f"{path.relative_to(ROOT)}: missing sitewide trust link {required_path}"
+            )
 
 incoming_links = defaultdict(set)
 for source_url, record in page_records.items():
@@ -827,6 +841,10 @@ required_privacy_disclosures = {
     "Google partner data-use link": "https://policies.google.com/technologies/partner-sites",
     "Google advertising settings": "https://adssettings.google.com/",
     "third-party advertising opt-out": "https://optout.aboutads.info/",
+    "Google and third-party advertising vendors": "Third-party vendors, including Google",
+    "advertising cookie purpose": "Google’s use of advertising cookies",
+    "cross-site advertising basis": "visit to this site and other sites on the Internet",
+    "advertising measurement technologies": "cookies, web beacons, IP addresses",
     "certified CMP disclosure": "Google-certified consent management platform",
     "US state opt-out disclosure": "Do Not Sell or Share My Personal Information",
     "Global Privacy Platform disclosure": "Global Privacy Platform",
