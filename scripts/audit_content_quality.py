@@ -11,6 +11,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTICLE_ROOT = ROOT / "articles"
+TOOL_ROOT = ROOT / "tools"
 MIN_WORDS = 600
 MIN_H2S = 8
 MIN_CONTENT_BLOCKS = 15
@@ -133,6 +134,7 @@ def main():
     errors = []
     records = {}
     repeated_paragraphs = defaultdict(list)
+    linked_tools = set()
 
     if not paths:
         errors.append("No article pages found")
@@ -149,6 +151,9 @@ def main():
             "five_grams": ngrams(tokens),
         }
 
+        if source.count("<article") != 1 or source.count("</article>") != 1:
+            errors.append(f"{relative}: expected one balanced article element")
+
         if parser.h1_count != 1:
             errors.append(f"{relative}: expected 1 h1, found {parser.h1_count}")
         if parser.h2_count < MIN_H2S:
@@ -160,6 +165,14 @@ def main():
             )
         if len(tokens) < MIN_WORDS:
             errors.append(f"{relative}: only {len(tokens)} visible words (minimum {MIN_WORDS})")
+        specific_tool_links = re.findall(
+            r'href=["\'](?:\.\./\.\./|/)tools/([^"\'#?]+/)["\']', source
+        )
+        if not specific_tool_links:
+            errors.append(
+                f"{relative}: article has no contextual link to a specific interactive tool"
+            )
+        linked_tools.update(link.rstrip("/") for link in specific_tool_links)
         for label, pattern in UNIVERSAL_RECIPE_PATTERNS.items():
             if pattern.search(source):
                 errors.append(f"{relative}: contains {label}")
@@ -172,6 +185,14 @@ def main():
             normalized = normalized_paragraph(text)
             if len(normalized.split()) >= MIN_DUPLICATE_PARAGRAPH_WORDS:
                 repeated_paragraphs[normalized].append(relative)
+
+    published_tools = {path.parent.name for path in TOOL_ROOT.glob("*/index.html")}
+    missing_article_inbound_links = sorted(published_tools - linked_tools)
+    if missing_article_inbound_links:
+        errors.append(
+            "interactive tools without a contextual article link: "
+            + ", ".join(missing_article_inbound_links)
+        )
 
     for paragraph, owners in repeated_paragraphs.items():
         unique_owners = sorted(set(owners))
