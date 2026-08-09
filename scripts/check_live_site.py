@@ -24,6 +24,10 @@ ADSENSE_SCRIPT_URL = (
 EXPECTED_ADS_TXT = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
 INDEXNOW_KEY = "3c65545768a3f277e57c54d66b2dacbe"
 USER_AGENT = "DishwasherCareLab-LiveMonitor/1.0 (+https://dishwashercarehub.com/contact/)"
+REMOVED_BACKUP_URLS = (
+    f"{BASE_URL}/articles/dishwasher-cloudy-glasses-after-cycle/index.html.bak",
+    f"{BASE_URL}/articles/how-to-clean-dishwasher-filter/index.html.bak",
+)
 
 
 def tls_context():
@@ -294,6 +298,14 @@ def main():
     if missing_parser.adsense_scripts:
         errors.append("custom 404 page must not load the AdSense publisher script")
 
+    for backup_url in REMOVED_BACKUP_URLS:
+        backup_response = fetch(backup_url)
+        if backup_response.status != 404:
+            errors.append(
+                f"removed backup URL should return HTTP 404, got "
+                f"{backup_response.status}: {backup_url}"
+            )
+
     try:
         vercel_config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
@@ -318,7 +330,7 @@ def main():
         f"Live site healthy: {len(urls)} canonical pages returned HTML 200 with "
         f"matching canonicals and AdSense; Atom feed has {len(feed_urls)} articles; "
         "robots, sitemap, ads.txt, IndexNow ownership, security headers, "
-        "historical redirects, and HTTP 404 behavior passed."
+        "historical redirects, removed backup URLs, and HTTP 404 behavior passed."
     )
     return 0
 

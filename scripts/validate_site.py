@@ -13,6 +13,15 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML_FILES = sorted(ROOT.glob("**/*.html"))
+FORBIDDEN_PUBLISHED_FILES = sorted(
+    path
+    for path in ROOT.rglob("*")
+    if path.is_file()
+    and any(
+        path.name.endswith(suffix)
+        for suffix in (".bak", ".bak2", ".orig", ".rej", ".tmp", "~")
+    )
+)
 ADSENSE_SCRIPT_URL = (
     "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?"
     "client=ca-pub-9156049827002127"
@@ -122,7 +131,10 @@ def local_target(source: Path, value: str):
     return target.resolve()
 
 
-errors = []
+errors = [
+    f"{path.relative_to(ROOT)}: backup or editor-temporary file must not be published"
+    for path in FORBIDDEN_PUBLISHED_FILES
+]
 canonical_pages = set()
 page_records = {}
 for path in HTML_FILES:
