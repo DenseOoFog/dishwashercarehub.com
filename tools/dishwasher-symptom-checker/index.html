@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dishwasher Symptom Checker: Find Safe Next Steps | Dishwasher Care Lab</title>
+  <meta name="description" content="Answer a few questions about your dishwasher problem and get a prioritized, safety-first troubleshooting plan with matching repair guides.">
+  <link rel="canonical" href="https://dishwashercarehub.com/tools/dishwasher-symptom-checker/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+</head>
+<body>
+  <header class="site-header"><div class="header-inner"><strong class="brand-mark">Dishwasher Care Lab</strong><nav><a href="../../">Home</a><a href="./" aria-current="page">Symptom Checker</a><a href="../../about/">About</a><a href="../../contact/">Contact</a></nav></div></header>
+  <main class="article-shell tool-shell">
+    <section class="hero-panel article-hero">
+      <p class="eyebrow">Free interactive tool</p>
+      <h1>Dishwasher Symptom Checker</h1>
+      <p class="summary">Describe what you see. We will organize the safest checks to try first and show when the problem belongs with a professional.</p>
+      <p>No sign-up is required. Your answers stay in this browser and are not sent to us.</p>
+    </section>
+
+    <form id="symptom-form" class="surface-card tool-form">
+      <fieldset>
+        <legend>1. What is the main problem?</legend>
+        <label><input type="radio" name="symptom" value="water" required> Water remains in the bottom</label>
+        <label><input type="radio" name="symptom" value="smell"> Bad or sewer-like smell</label>
+        <label><input type="radio" name="symptom" value="drying"> Dishes stay wet</label>
+        <label><input type="radio" name="symptom" value="residue"> Cloudy glasses or white residue</label>
+        <label><input type="radio" name="symptom" value="start"> Will not start or turn on</label>
+        <label><input type="radio" name="symptom" value="leak"> Water is leaking</label>
+      </fieldset>
+      <div class="tool-grid">
+        <label>When did it begin?
+          <select name="timing"><option value="sudden">Suddenly</option><option value="gradual">Gradually</option><option value="install">After installation or sink work</option></select>
+        </label>
+        <label>Have you cleaned the filter recently?
+          <select name="filter"><option value="unknown">Not sure</option><option value="no">No</option><option value="yes">Yes</option></select>
+        </label>
+        <label>Do you hear a new grinding or humming noise?
+          <select name="noise"><option value="no">No</option><option value="yes">Yes</option></select>
+        </label>
+        <label>Is there active leaking, smoke, a burning smell, or a tripped breaker?
+          <select name="hazard"><option value="no">No</option><option value="yes">Yes</option></select>
+        </label>
+      </div>
+      <button class="pill-button primary-button tool-submit" type="submit">Build my troubleshooting plan</button>
+    </form>
+
+    <section id="tool-result" class="surface-card tool-result" aria-live="polite" tabindex="-1" hidden></section>
+
+    <section class="surface-card article-section">
+      <h2>What this checker can—and cannot—do</h2>
+      <p>It prioritizes normal household maintenance such as checking settings, loading, filters, visible hoses, and the air gap. It cannot inspect electrical parts, pumps, valves, wiring, or concealed leaks.</p>
+      <p>Always disconnect power before removing a filter or reaching into the tub. Do not dismantle panels, bypass a door latch, or work on live wiring. Model-specific instructions in your owner’s manual take priority.</p>
+    </section>
+  </main>
+  <footer><p>Independent dishwasher care guidance for homeowners and renters.</p></footer>
+  <script src="../../assets/symptom-checker.js" defer></script>
+  <script src="../../assets/footer-ads-loader.js" defer></script>
+</body>
+</html>
