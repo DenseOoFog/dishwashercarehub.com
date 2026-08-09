@@ -30,7 +30,7 @@ const publishedGuides = Array.from(page.matchAll(
   title: match[4]
 }));
 
-assert.equal(publishedGuides.length, 32);
+assert.equal(publishedGuides.length, 31);
 function matchingTitles(query, category = 'all') {
   return finder.filterGuides(publishedGuides, query, category).map(item => item.guide.title);
 }

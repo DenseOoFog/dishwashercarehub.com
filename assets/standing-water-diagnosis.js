@@ -49,7 +49,7 @@
     service: {
       label: 'The next useful check likely requires service',
       text: 'With a clean filter, normal sink, and no drain sound, the remaining possibilities include the drain pump, control, wiring, or a concealed restriction. Those checks require electrical testing or disassembly.',
-      href: '../../articles/dishwasher-drain-not-working-after-cycle/',
+      href: '../../articles/dishwasher-wont-drain-completely/',
       link: 'See when a drain failure needs service'
     },
     hazard: {

@@ -27,6 +27,11 @@
   ],
   "redirects": [
     {
+      "source": "/articles/dishwasher-drain-not-working-after-cycle/",
+      "destination": "/articles/dishwasher-wont-drain-completely/",
+      "permanent": true
+    },
+    {
       "source": "/articles/dishwasher-dishes-still-wet-after-heated-dry/",
       "destination": "/articles/dishwasher-not-drying-dishes-completely/",
       "permanent": true
