@@ -4,6 +4,7 @@
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlparse
+import json
 import re
 import sys
 
@@ -20,6 +21,8 @@ class LinkParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.links = []
+        self.json_ld = []
+        self._json_buffer = None
 
     def handle_starttag(self, tag, attrs):
         values = dict(attrs)
@@ -27,6 +30,17 @@ class LinkParser(HTMLParser):
             target = values.get("href") or values.get("src")
             if target:
                 self.links.append(target)
+        if tag == "script" and values.get("type") == "application/ld+json":
+            self._json_buffer = []
+
+    def handle_data(self, data):
+        if self._json_buffer is not None:
+            self._json_buffer.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "script" and self._json_buffer is not None:
+            self.json_ld.append("".join(self._json_buffer))
+            self._json_buffer = None
 
 
 def local_target(source: Path, value: str):
@@ -50,6 +64,14 @@ for path in HTML_FILES:
             errors.append(f"{path.relative_to(ROOT)}: {label}")
     parser = LinkParser()
     parser.feed(text)
+    for index, payload in enumerate(parser.json_ld, start=1):
+        try:
+            json.loads(payload)
+        except json.JSONDecodeError as error:
+            errors.append(
+                f"{path.relative_to(ROOT)}: invalid JSON-LD block {index} "
+                f"at line {error.lineno}, column {error.colno}"
+            )
     for link in parser.links:
         target = local_target(path, link)
         if target and not target.exists():
