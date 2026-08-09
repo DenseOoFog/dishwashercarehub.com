@@ -7,9 +7,7 @@ Usage:
   python3 -m venv ~/.hermes/profiles/adsense/venv
   source ~/.hermes/profiles/adsense/venv/bin/activate
   # install deps (if pip proxy issues, run with env -u ... as shown below)
-  env -u ALL_PROXY -u all_proxy -u HTTP_PROXY -u http_proxy -u HTTPS_PROXY -u https_proxy \ \
-      ~/.hermes/profiles/adsense/venv/bin/python -m pip install --upgrade pip setuptools wheel && \
-      env -u ALL_PROXY -u all_proxy -u HTTP_PROXY -u http_proxy -u HTTPS_PROXY -u https_proxy ~/.hermes/profiles/adsense/venv/bin/python -m pip install google-auth google-auth-httplib2 google-api-python-client
+  Install google-auth, google-auth-httplib2, and google-api-python-client in a virtual environment.
 
   # run
   ~/.hermes/profiles/adsense/venv/bin/python scripts/gsc_fetch.py
@@ -29,8 +27,11 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
-KEYPATH = os.path.expanduser('~/.hermes/profiles/adsense/credentials/searchconsole-service-account.json')
-OUT_BASE = Path('/Users/densefog/Agents/dishwashercarehub.com/Performance')
+KEYPATH = os.path.expanduser(os.environ.get(
+    'GSC_CREDENTIALS_FILE',
+    '~/.hermes/profiles/adsense/credentials/searchconsole-service-account.json',
+))
+OUT_BASE = Path(os.environ.get('GSC_OUTPUT_DIR', Path(__file__).resolve().parents[1] / 'Performance'))
 
 # helper to print install guidance
 def print_install_help():
@@ -45,20 +46,24 @@ def print_install_help():
     print("  ~/.hermes/profiles/adsense/venv/bin/python -m pip install google-auth google-auth-httplib2 google-api-python-client")
     print("\nAfter that, run this script with the venv python.\n")
 
-try:
-    from google.oauth2 import service_account
-    from googleapiclient.discovery import build
-    from googleapiclient.errors import HttpError
-except Exception as e:
-    print_install_help()
-    sys.exit(2)
-
 # basic API helpers
 SCOPES = ['https://www.googleapis.com/auth/webmasters.readonly']
 
 if not os.path.exists(KEYPATH):
     print(f"Service account key not found at: {KEYPATH}\nPlease place the JSON key there and set permissions chmod 600.")
     sys.exit(3)
+
+if os.path.getsize(KEYPATH) == 0:
+    print(f"Search Console credential file is empty: {KEYPATH}")
+    sys.exit(3)
+
+try:
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+    from googleapiclient.errors import HttpError
+except Exception:
+    print_install_help()
+    sys.exit(2)
 
 creds = service_account.Credentials.from_service_account_file(KEYPATH, scopes=SCOPES)
 webmasters = build('webmasters', 'v3', credentials=creds)

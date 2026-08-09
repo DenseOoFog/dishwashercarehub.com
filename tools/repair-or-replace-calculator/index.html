@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dishwasher Repair or Replace Calculator | Dishwasher Care Lab</title>
+  <meta name="description" content="Compare a dishwasher repair quote with replacement cost, appliance age, and recent repair history using a transparent decision calculator.">
+  <link rel="canonical" href="https://dishwashercarehub.com/tools/repair-or-replace-calculator/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Dishwasher Repair or Replace Calculator","url":"https://dishwashercarehub.com/tools/repair-or-replace-calculator/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+</head>
+<body>
+  <header class="site-header"><div class="header-inner"><strong class="brand-mark">Dishwasher Care Lab</strong><nav><a href="../../">Home</a><a href="../dishwasher-symptom-checker/">Symptom Checker</a><a href="./" aria-current="page">Repair or Replace</a><a href="../../about/">About</a></nav></div></header>
+  <main class="article-shell tool-shell">
+    <section class="hero-panel article-hero">
+      <p class="eyebrow">Free decision tool</p>
+      <h1>Dishwasher Repair or Replace Calculator</h1>
+      <p class="summary">Compare the quote you received with replacement cost, appliance age, and repair history. The result explains the tradeoffs instead of pretending there is one universal rule.</p>
+      <p>Your entries remain on this device. Prices are in US dollars and should include labor, parts, delivery, installation, and haul-away when applicable.</p>
+    </section>
+
+    <form id="repair-form" class="surface-card tool-form">
+      <div class="tool-grid">
+        <label>Dishwasher age (years)
+          <input name="age" type="number" min="0" max="30" step="0.5" value="7" required>
+        </label>
+        <label>Current repair quote ($)
+          <input name="repair" type="number" min="0" max="10000" step="1" placeholder="350" required>
+        </label>
+        <label>Comparable replacement installed ($)
+          <input name="replacement" type="number" min="1" max="20000" step="1" placeholder="900" required>
+        </label>
+        <label>Repairs in the last 24 months
+          <select name="repairs"><option value="0">None</option><option value="1">One</option><option value="2">Two or more</option></select>
+        </label>
+        <label>Does the quote include a major component?
+          <select name="major"><option value="no">No or not sure</option><option value="yes">Yes — pump, motor, control, tub, or heater</option></select>
+        </label>
+        <label>Is there concealed leaking, scorching, or repeated breaker tripping?
+          <select name="hazard"><option value="no">No</option><option value="yes">Yes</option></select>
+        </label>
+      </div>
+      <button class="pill-button primary-button tool-submit" type="submit">Compare my options</button>
+    </form>
+
+    <section id="repair-result" class="surface-card tool-result" aria-live="polite" tabindex="-1" hidden></section>
+
+    <section class="surface-card article-section">
+      <h2>How the calculation works</h2>
+      <p>The tool divides the repair quote by the installed replacement price. It then considers age, repeat repairs, major-component work, and safety or water-damage signals. It does not assume that every repair above an arbitrary percentage is wasteful.</p>
+      <ul>
+        <li><strong>Repair cost ratio:</strong> repair quote ÷ installed replacement price.</li>
+        <li><strong>History adjustment:</strong> repeat faults make another repair less predictable.</li>
+        <li><strong>Age adjustment:</strong> an older machine has less time to spread the repair cost over.</li>
+        <li><strong>Safety adjustment:</strong> leaks, scorching, and electrical symptoms require qualified inspection, regardless of the calculator result.</li>
+      </ul>
+    </section>
+
+    <section class="surface-card article-section">
+      <h2>Before accepting either estimate</h2>
+      <ul class="checklist">
+        <li>Ask whether the diagnostic fee is included in the repair quote.</li>
+        <li>Confirm the parts-and-labor warranty and whether a return visit is covered.</li>
+        <li>For replacement, include installation parts, permit or electrical work, delivery, and haul-away.</li>
+        <li>Check whether a leak damaged flooring or cabinets; those costs are separate from the appliance decision.</li>
+        <li>Get a second diagnosis when a major component is blamed without clear testing.</li>
+      </ul>
+    </section>
+  </main>
+  <footer><p>Independent dishwasher care guidance for homeowners and renters.</p></footer>
+  <script src="../../assets/repair-or-replace.js" defer></script>
+  <script src="../../assets/footer-ads-loader.js" defer></script>
+</body>
+</html>
