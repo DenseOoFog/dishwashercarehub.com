@@ -17,6 +17,26 @@ MIN_CONTENT_BLOCKS = 15
 MIN_DUPLICATE_PARAGRAPH_WORDS = 18
 MAX_FIVE_GRAM_JACCARD = 0.25
 WORD_RE = re.compile(r"[A-Za-z0-9]+(?:['’.-][A-Za-z0-9]+)*")
+UNIVERSAL_RECIPE_PATTERNS = {
+    "fixed detergent dose": re.compile(
+        r"\b(?:one tablespoon per normal load|reduce detergent to one tablespoon)\b",
+        re.IGNORECASE,
+    ),
+    "universal vinegar cleaning cycle": re.compile(
+        r"\b(?:run (?:a|an|the) (?:empty |full )?vinegar cycle|"
+        r"vinegar cleaning cycle)\b",
+        re.IGNORECASE,
+    ),
+    "universal cleaner quantity": re.compile(
+        r"\b(?:two cups white vinegar|one cup baking soda|"
+        r"pour a cup of white vinegar)\b",
+        re.IGNORECASE,
+    ),
+    "universal cycle or interval": re.compile(
+        r"\b(?:hottest and longest cycle|monthly without exception)\b",
+        re.IGNORECASE,
+    ),
+}
 
 
 class ArticleParser(HTMLParser):
@@ -105,6 +125,7 @@ def main():
     for path in paths:
         parser = parse_article(path)
         relative = path.relative_to(ROOT).as_posix()
+        source = path.read_text(encoding="utf-8")
         visible_text = " ".join(text for _, text in parser.blocks)
         tokens = words(visible_text)
         content_blocks = [text for tag, text in parser.blocks if tag in {"p", "li"}]
@@ -124,6 +145,9 @@ def main():
             )
         if len(tokens) < MIN_WORDS:
             errors.append(f"{relative}: only {len(tokens)} visible words (minimum {MIN_WORDS})")
+        for label, pattern in UNIVERSAL_RECIPE_PATTERNS.items():
+            if pattern.search(source):
+                errors.append(f"{relative}: contains {label}")
 
         # Repeated source citations and short safety bullets are legitimate across
         # closely related guides. Prose paragraphs, however, should be original.
