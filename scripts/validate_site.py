@@ -29,6 +29,8 @@ ADSENSE_SCRIPT_URL = (
 ADS_TXT_RECORD = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
 ORGANIZATION_ID = "https://dishwashercarehub.com/#organization"
 WEBSITE_ID = "https://dishwashercarehub.com/#website"
+TITLE_LENGTH_RANGE = range(30, 66)
+DESCRIPTION_LENGTH_RANGE = range(80, 166)
 APPROVED_SOURCE_HOSTS = {
     "media3.bosch-home.com",
     "producthelp.whirlpool.com",
@@ -551,6 +553,15 @@ for field in ("title", "description"):
             )
         else:
             values[record[field]].append(record["path"])
+            allowed_lengths = (
+                TITLE_LENGTH_RANGE if field == "title" else DESCRIPTION_LENGTH_RANGE
+            )
+            if len(record[field]) not in allowed_lengths:
+                errors.append(
+                    f"{record['path'].relative_to(ROOT)}: {field} length "
+                    f"{len(record[field])} is outside "
+                    f"{allowed_lengths.start}–{allowed_lengths.stop - 1} characters"
+                )
     for value, paths in values.items():
         if len(paths) > 1:
             joined_paths = ", ".join(str(path.relative_to(ROOT)) for path in paths)
