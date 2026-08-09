@@ -4,6 +4,7 @@
 from argparse import ArgumentParser
 from datetime import date, timedelta
 from pathlib import Path
+import os
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
@@ -107,6 +108,46 @@ def submit(endpoint, body, timeout=30):
     return status
 
 
+def url_categories(urls):
+    return {
+        "articles": sum("/articles/" in url for url in urls),
+        "tools": sum("/tools/" in url for url in urls),
+        "other": sum(
+            "/articles/" not in url and "/tools/" not in url for url in urls
+        ),
+    }
+
+
+def github_summary(urls, endpoint, since_days=None, status=None):
+    categories = url_categories(urls)
+    mode = "all sitemap URLs" if since_days is None else f"lastmod within {since_days} days"
+    result = "dry run" if status is None else f"accepted (HTTP {status})"
+    return "\n".join(
+        [
+            "## IndexNow submission",
+            "",
+            f"- Result: **{result}**",
+            f"- Selection: **{mode}**",
+            f"- Submitted: **{len(urls)} canonical URLs**",
+            (
+                f"- Coverage: **{categories['articles']} articles**, "
+                f"**{categories['tools']} tool URLs**, **{categories['other']} other pages**"
+            ),
+            f"- Endpoint: `{endpoint}`",
+            "- Source of truth: `sitemap.xml`",
+            "",
+        ]
+    )
+
+
+def write_github_summary(content):
+    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_path:
+        return
+    with open(summary_path, "a", encoding="utf-8") as summary_file:
+        summary_file.write(content)
+
+
 def main(argv=None):
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("--submit", action="store_true", help="send the request")
@@ -124,15 +165,20 @@ def main(argv=None):
         body = payload(urls, key)
         if not urls:
             print("No recently modified canonical URLs to submit.")
+            write_github_summary(github_summary(urls, args.endpoint, args.since_days))
             return 0
         if not args.submit:
             print(
                 f"IndexNow dry run passed for {len(urls)} canonical URLs; "
                 f"key location: {KEY_URL}"
             )
+            write_github_summary(github_summary(urls, args.endpoint, args.since_days))
             return 0
         status = submit(args.endpoint, body)
         print(f"IndexNow accepted {len(urls)} canonical URLs with HTTP {status}.")
+        write_github_summary(
+            github_summary(urls, args.endpoint, args.since_days, status)
+        )
         return 0
     except (ValueError, RuntimeError, OSError) as error:
         print(f"IndexNow submission failed: {error}", file=sys.stderr)

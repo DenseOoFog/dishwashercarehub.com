@@ -3,7 +3,15 @@
 from datetime import date
 import unittest
 
-from submit_indexnow import HOST, INDEXNOW_KEY, KEY_URL, payload, select_urls
+from submit_indexnow import (
+    HOST,
+    INDEXNOW_KEY,
+    KEY_URL,
+    github_summary,
+    payload,
+    select_urls,
+    url_categories,
+)
 
 
 class IndexNowTests(unittest.TestCase):
@@ -33,6 +41,24 @@ class IndexNowTests(unittest.TestCase):
     def test_negative_since_days_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "zero or greater"):
             select_urls([], since_days=-1)
+
+    def test_summary_reports_selection_and_url_coverage_without_key(self):
+        urls = [
+            "https://dishwashercarehub.com/",
+            "https://dishwashercarehub.com/articles/drain/",
+            "https://dishwashercarehub.com/tools/noise-decoder/",
+        ]
+        self.assertEqual(
+            url_categories(urls), {"articles": 1, "tools": 1, "other": 1}
+        )
+        summary = github_summary(
+            urls, "https://api.indexnow.org/indexnow", since_days=2, status=202
+        )
+        self.assertIn("accepted (HTTP 202)", summary)
+        self.assertIn("lastmod within 2 days", summary)
+        self.assertIn("3 canonical URLs", summary)
+        self.assertIn("1 articles", summary)
+        self.assertNotIn(INDEXNOW_KEY, summary)
 
 
 if __name__ == "__main__":
