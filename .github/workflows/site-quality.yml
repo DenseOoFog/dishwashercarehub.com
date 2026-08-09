@@ -23,6 +23,7 @@ jobs:
       - run: python scripts/audit_dependency_lock.py
       - run: python scripts/test_dependency_lock.py
       - run: python scripts/audit_content_quality.py
+      - run: python scripts/audit_tool_quality.py
       - run: python scripts/audit_performance_budget.py
       - run: python scripts/test_performance_budget.py
       - run: python scripts/generate_feed.py --check
