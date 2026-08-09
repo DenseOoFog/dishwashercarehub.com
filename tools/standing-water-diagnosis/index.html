@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dishwasher Standing Water Diagnosis Tool | Dishwasher Care Lab</title>
+  <meta name="description" content="Use six observable clues to narrow down standing water in a dishwasher: filter blockage, hose restriction, air gap, disposal connection, backflow, or service-level fault.">
+  <link rel="canonical" href="https://dishwashercarehub.com/tools/standing-water-diagnosis/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Dishwasher Standing Water Diagnosis Tool","url":"https://dishwashercarehub.com/tools/standing-water-diagnosis/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+</head>
+<body>
+  <header class="site-header"><div class="header-inner"><strong class="brand-mark">Dishwasher Care Lab</strong><nav><a href="../../">Home</a><a href="../dishwasher-symptom-checker/">Symptom Checker</a><a href="./" aria-current="page">Standing Water Tool</a><a href="../repair-or-replace-calculator/">Repair or Replace</a></nav></div></header>
+  <main class="article-shell tool-shell">
+    <section class="hero-panel article-hero">
+      <p class="eyebrow">Drain-path decision tool</p>
+      <h1>Why Is Water Standing in My Dishwasher?</h1>
+      <p class="summary">Use clues you can see and hear—without opening service panels—to find the most sensible next check.</p>
+      <p>This tool separates normal sump water from filter trouble, sink-side backup, disposal installation mistakes, backflow, and faults that need service.</p>
+    </section>
+
+    <form id="water-form" class="surface-card tool-form">
+      <div class="tool-grid">
+        <label>How much water can you see?
+          <select name="amount"><option value="floor">A pool spread across the tub floor</option><option value="sump">Only a small amount down in the filter or sump area</option><option value="overflow">Water is leaking or close to overflowing</option></select>
+        </label>
+        <label>When is it most noticeable?
+          <select name="timing"><option value="after">Immediately after the cycle</option><option value="returns">It drains, then water comes back</option><option value="morning">Hours later or the next morning</option></select>
+        </label>
+        <label>What is the sink doing?
+          <select name="sink"><option value="normal">Draining normally</option><option value="slow">Slow, gurgling, or backing up</option><option value="unknown">Not sure</option></select>
+        </label>
+        <label>Was a garbage disposal recently installed or replaced?
+          <select name="disposal"><option value="no">No</option><option value="yes">Yes</option><option value="none">There is no disposal</option></select>
+        </label>
+        <label>If you have a sink-top air gap, does it spill water?
+          <select name="airgap"><option value="no">No</option><option value="yes">Yes</option><option value="none">No air gap or not sure</option></select>
+        </label>
+        <label>What happens when the machine tries to drain?
+          <select name="sound"><option value="normal">Normal drain sound</option><option value="hum">Persistent hum or grinding</option><option value="silent">No drain sound</option><option value="unknown">Not sure</option></select>
+        </label>
+        <label>Has the removable filter been cleaned and reinstalled correctly?
+          <select name="filter"><option value="no">No or not sure</option><option value="yes">Yes</option><option value="fixed">Yes, and that fixed it</option></select>
+        </label>
+      </div>
+      <button class="pill-button primary-button tool-submit" type="submit">Show my most likely path</button>
+    </form>
+
+    <section id="water-result" class="surface-card tool-result" aria-live="polite" tabindex="-1" hidden></section>
+
+    <section class="surface-card article-section">
+      <h2>What counts as standing water?</h2>
+      <p>A small amount below the filter surface can be normal on many models because seals and pumps may retain water. A visible pool across the flat tub floor, dirty water covering the filter, or water that returns after draining deserves attention.</p>
+      <p>Compare the level with your owner’s manual. Do not reach into cloudy water until power is disconnected; broken glass can hide below the surface.</p>
+    </section>
+
+    <section class="surface-card article-section">
+      <h2>The drain path this tool follows</h2>
+      <ol class="numbered-list">
+        <li>Filter and filter well inside the tub.</li>
+        <li>Drain hose route under the sink.</li>
+        <li>Air gap or high-loop backflow protection.</li>
+        <li>Garbage disposal inlet or sink drain connection.</li>
+        <li>Drain pump, wiring, and controls—which belong with qualified service.</li>
+      </ol>
+    </section>
+  </main>
+  <footer><p>Independent dishwasher care guidance for homeowners and renters.</p></footer>
+  <script src="../../assets/standing-water-diagnosis.js" defer></script>
+  <script src="../../assets/footer-ads-loader.js" defer></script>
+</body>
+</html>
