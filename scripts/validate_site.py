@@ -26,6 +26,8 @@ ADSENSE_SCRIPT_URL = (
     "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?"
     "client=ca-pub-9156049827002127"
 )
+ORGANIZATION_ID = "https://dishwashercarehub.com/#organization"
+WEBSITE_ID = "https://dishwashercarehub.com/#website"
 BAD_PATTERNS = {
     "repeated line-number prefixes": re.compile(r"^\s*(?:\d+\|\s*){2,}", re.MULTILINE),
     "literal output truncation": re.compile(r"\[truncated\]", re.IGNORECASE),
@@ -220,6 +222,74 @@ for path in HTML_FILES:
                 f"{path.relative_to(ROOT)}: invalid JSON-LD block {index} "
                 f"at line {error.lineno}, column {error.colno}"
             )
+    if path == ROOT / "index.html":
+        organization_objects = [
+            item for item in structured_objects
+            if isinstance(item, dict) and item.get("@type") == "Organization"
+        ]
+        website_objects = [
+            item for item in structured_objects
+            if isinstance(item, dict) and item.get("@type") == "WebSite"
+        ]
+        if len(organization_objects) != 1:
+            errors.append("index.html: expected one Organization JSON-LD object")
+        elif organization_objects[0] != {
+            "@type": "Organization",
+            "@id": ORGANIZATION_ID,
+            "name": "Dishwasher Care Lab",
+            "url": "https://dishwashercarehub.com/",
+            "email": "pqiswin1@gmail.com",
+        }:
+            errors.append("index.html: Organization identity is incomplete or inconsistent")
+        if len(website_objects) != 1:
+            errors.append("index.html: expected one WebSite JSON-LD object")
+        elif website_objects[0].get("publisher") != {"@id": ORGANIZATION_ID} or (
+            website_objects[0].get("@id") != WEBSITE_ID
+            or website_objects[0].get("url") != "https://dishwashercarehub.com/"
+            or website_objects[0].get("name") != "Dishwasher Care Lab"
+        ):
+            errors.append("index.html: WebSite identity does not reference the publisher")
+    if path == ROOT / "about" / "index.html":
+        about_objects = [
+            item for item in structured_objects
+            if isinstance(item, dict) and item.get("@type") == "AboutPage"
+        ]
+        if len(about_objects) != 1:
+            errors.append("about/index.html: expected one AboutPage JSON-LD object")
+        elif (
+            about_objects[0].get("url") != "https://dishwashercarehub.com/about/"
+            or about_objects[0].get("mainEntity") != {"@id": ORGANIZATION_ID}
+            or about_objects[0].get("isPartOf") != {"@id": WEBSITE_ID}
+        ):
+            errors.append("about/index.html: AboutPage does not reference the site identity")
+    if path.parent.parent.name == "tools":
+        application_objects = [
+            item for item in structured_objects
+            if isinstance(item, dict) and item.get("@type") == "WebApplication"
+        ]
+        if len(application_objects) != 1:
+            errors.append(
+                f"{path.relative_to(ROOT)}: expected one WebApplication JSON-LD object"
+            )
+        else:
+            application = application_objects[0]
+            expected_url = parser.canonical.rstrip("/") + "/" if parser.canonical else ""
+            required_values = {
+                "url": expected_url,
+                "applicationCategory": "UtilitiesApplication",
+                "operatingSystem": "Any",
+                "isAccessibleForFree": True,
+                "provider": {"@id": ORGANIZATION_ID},
+            }
+            for key, expected in required_values.items():
+                if application.get(key) != expected:
+                    errors.append(
+                        f"{path.relative_to(ROOT)}: WebApplication {key} is missing or inconsistent"
+                    )
+            if not application.get("name") or not application.get("description"):
+                errors.append(
+                    f"{path.relative_to(ROOT)}: WebApplication requires name and description"
+                )
     if path.parent.parent.name == "articles":
         external_sources = []
         for link in parser.anchor_links:
