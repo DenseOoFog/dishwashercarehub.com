@@ -45,6 +45,7 @@ h1, h2, h3 {
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 footer { border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 0; }
+.footer-links { display: inline-block; margin-left: 0.65rem; }
 .header-inner, footer p {
   max-width: 1120px;
   margin: 0 auto;
