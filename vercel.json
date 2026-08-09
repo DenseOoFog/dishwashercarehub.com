@@ -4,6 +4,11 @@
   "trailingSlash": true,
   "redirects": [
     {
+      "source": "/articles/dishwasher-dishes-still-wet-after-heated-dry/",
+      "destination": "/articles/dishwasher-not-drying-dishes-completely/",
+      "permanent": true
+    },
+    {
       "source": "/articles/dishwasher-dishes-still-wet-after-heated-dry/:path*",
       "destination": "/articles/dishwasher-not-drying-dishes-completely/",
       "permanent": true
