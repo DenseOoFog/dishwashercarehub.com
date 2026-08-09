@@ -291,6 +291,16 @@ for path in HTML_FILES:
         ):
             errors.append("about/index.html: AboutPage does not reference the site identity")
     if path.parent.parent.name == "tools":
+        if "<noscript>" not in text or "needs JavaScript" not in text:
+            errors.append(
+                f"{path.relative_to(ROOT)}: interactive tool requires a noscript fallback"
+            )
+        if not re.search(
+            r"Your (?:answers|entries|selections) stay in this browser", text
+        ):
+            errors.append(
+                f"{path.relative_to(ROOT)}: interactive tool requires a local-processing disclosure"
+            )
         application_objects = [
             item for item in structured_objects
             if isinstance(item, dict) and item.get("@type") == "WebApplication"
