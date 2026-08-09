@@ -5,6 +5,7 @@ import unittest
 
 from check_live_site import (
     ADSENSE_SCRIPT_URL,
+    PageParser,
     Response,
     sitemap_urls,
     validate_html_page,
@@ -56,6 +57,21 @@ class LiveSiteMonitorTests(unittest.TestCase):
         response.body = duplicate
         with self.assertRaisesRegex(RuntimeError, "duplicate"):
             sitemap_urls(response)
+
+    def test_404_parser_detects_noindex_without_ads_or_canonical(self):
+        body = '<html><head><meta name="robots" content="noindex, follow"></head><body data-error-page="404"></body></html>'
+        response = Response(
+            "https://dishwashercarehub.com/missing/",
+            "https://dishwashercarehub.com/missing/",
+            404,
+            headers("text/html"),
+            body,
+        )
+        parser = PageParser()
+        parser.feed(response.body)
+        self.assertTrue(any("noindex" in value for value in parser.robots_values))
+        self.assertEqual(parser.canonicals, [])
+        self.assertEqual(parser.adsense_scripts, 0)
 
 
 if __name__ == "__main__":

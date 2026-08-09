@@ -201,6 +201,18 @@ def main():
     missing = fetch(f"{BASE_URL}/definitely-not-a-real-page-monitor-check/")
     if missing.status != 404:
         errors.append(f"unknown URL should return HTTP 404, got {missing.status}")
+    if not missing.headers.get("Content-Type", "").lower().startswith("text/html"):
+        errors.append("unknown URL should return the custom HTML 404 page")
+    if 'data-error-page="404"' not in missing.body:
+        errors.append("unknown URL did not return the branded 404 recovery page")
+    missing_parser = PageParser()
+    missing_parser.feed(missing.body)
+    if not any("noindex" in value for value in missing_parser.robots_values):
+        errors.append("custom 404 page must contain a noindex robots directive")
+    if missing_parser.canonicals:
+        errors.append("custom 404 page must not declare a canonical URL")
+    if missing_parser.adsense_scripts:
+        errors.append("custom 404 page must not load the AdSense publisher script")
 
     if errors:
         print("Live site monitor failed:")

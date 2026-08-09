@@ -427,6 +427,31 @@ expected_ads_txt = "google.com, pub-9156049827002127, DIRECT, f08c47fec0942fa0"
 if ads_txt_lines != [expected_ads_txt]:
     errors.append("ads.txt: publisher declaration is missing, duplicated, or malformed")
 
+not_found_path = ROOT / "404.html"
+not_found_text = not_found_path.read_text(encoding="utf-8")
+not_found_parser = LinkParser()
+not_found_parser.feed(not_found_text)
+if 'data-error-page="404"' not in not_found_text:
+    errors.append("404.html: missing branded error-page marker")
+if not re.search(
+    r'<meta name="robots" content="[^"]*noindex[^"]*">',
+    not_found_text,
+    re.IGNORECASE,
+):
+    errors.append("404.html: missing noindex robots directive")
+if not_found_parser.canonical:
+    errors.append("404.html: error pages must not declare a canonical URL")
+if ADSENSE_SCRIPT_URL in not_found_text:
+    errors.append("404.html: error pages must not load AdSense")
+for required_path in (
+    "/",
+    "/tools/",
+    "/tools/dishwasher-guide-finder/",
+    "/contact/",
+):
+    if required_path not in not_found_parser.anchor_links:
+        errors.append(f"404.html: missing recovery link {required_path}")
+
 guide_finder_path = ROOT / "tools" / "dishwasher-guide-finder" / "index.html"
 guide_finder_text = guide_finder_path.read_text(encoding="utf-8")
 guide_finder_parser = LinkParser()
