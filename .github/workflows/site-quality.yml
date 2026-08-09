@@ -36,3 +36,4 @@ jobs:
       - run: node scripts/test_dishwasher_cycle_selector.js
       - run: node scripts/test_maintenance_planner.js
       - run: node scripts/test_dishwasher_noise_decoder.js
+      - run: node scripts/test_standing_water_diagnosis.js
