@@ -30,5 +30,6 @@ jobs:
       - run: python scripts/test_indexnow.py
       - run: node scripts/test_guide_finder.js
       - run: node scripts/test_water_hardness_converter.js
+      - run: node scripts/test_detergent_dose_guide.js
       - run: node scripts/test_maintenance_planner.js
       - run: node scripts/test_dishwasher_noise_decoder.js
