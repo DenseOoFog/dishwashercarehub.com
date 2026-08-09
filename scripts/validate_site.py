@@ -49,6 +49,7 @@ class LinkParser(HTMLParser):
         self.anchor_links = []
         self.canonical = None
         self.feed_links = []
+        self.images = []
         self.title_parts = []
         self.meta_description = None
         self.social_meta = defaultdict(list)
@@ -62,6 +63,8 @@ class LinkParser(HTMLParser):
             target = values.get("href") or values.get("src")
             if target:
                 self.links.append(target)
+        if tag == "img":
+            self.images.append(values)
         if tag == "a" and values.get("href"):
             self.anchor_links.append(values["href"])
         if tag == "link" and "canonical" in values.get("rel", "").lower():
@@ -155,6 +158,20 @@ for path in HTML_FILES:
         )
     parser = LinkParser()
     parser.feed(text)
+    for image in parser.images:
+        image_source = image.get("src", "<missing src>")
+        if not image.get("alt", "").strip():
+            errors.append(f"{path.relative_to(ROOT)}: image has missing or empty alt {image_source}")
+        for dimension in ("width", "height"):
+            value = image.get(dimension, "")
+            if not value.isdigit() or int(value) <= 0:
+                errors.append(
+                    f"{path.relative_to(ROOT)}: image has invalid {dimension} {image_source}"
+                )
+        if image.get("loading") not in {"lazy", "eager"}:
+            errors.append(f"{path.relative_to(ROOT)}: image has no loading strategy {image_source}")
+        if image.get("decoding") != "async":
+            errors.append(f"{path.relative_to(ROOT)}: image does not use async decoding {image_source}")
     if path.name == "index.html" and parser.canonical:
         canonical_url = parser.canonical.rstrip("/") + "/"
         canonical_pages.add(canonical_url)
