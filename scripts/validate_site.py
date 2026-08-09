@@ -14,6 +14,15 @@ BAD_PATTERNS = {
     "repeated line-number prefixes": re.compile(r"^\s*(?:\d+\|\s*){2,}", re.MULTILINE),
     "literal output truncation": re.compile(r"\[truncated\]", re.IGNORECASE),
     "injected Chinese template text": re.compile(r"解决方法和步骤"),
+    "published writing instruction": re.compile(
+        r"\bExplain dishwasher .+? in plain language|"
+        r"\bKeep the advice bounded to user-safe",
+        re.IGNORECASE,
+    ),
+    "generic placeholder FAQ": re.compile(
+        r"How often should I handle dishwasher .+?\?",
+        re.IGNORECASE,
+    ),
     "HTML link inside title": re.compile(r"<title[^>]*>[^\n]*<a\b", re.IGNORECASE),
     "HTML link inside meta description": re.compile(
         r"<meta[^>]+name=[\"']description[\"'][^\n]*<a\b", re.IGNORECASE
