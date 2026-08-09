@@ -131,6 +131,10 @@ for path in HTML_FILES:
     for label, pattern in BAD_PATTERNS.items():
         if pattern.search(text):
             errors.append(f"{path.relative_to(ROOT)}: {label}")
+    if "fonts.googleapis.com" in text or "fonts.gstatic.com" in text:
+        errors.append(
+            f"{path.relative_to(ROOT)}: render-blocking third-party font dependency"
+        )
     parser = LinkParser()
     parser.feed(text)
     if path.name == "index.html" and parser.canonical:
