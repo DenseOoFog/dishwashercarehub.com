@@ -3,7 +3,14 @@
 
 import unittest
 
-from gsc_fetch import aggregate_rows, fetch_all_rows, normalize_property_url, select_property
+from gsc_fetch import (
+    aggregate_rows,
+    compare_aggregates,
+    fetch_all_rows,
+    metric_totals,
+    normalize_property_url,
+    select_property,
+)
 
 
 class PropertySelectionTests(unittest.TestCase):
@@ -28,6 +35,30 @@ class AggregationTests(unittest.TestCase):
         self.assertEqual(page["impressions"], 100)
         self.assertAlmostEqual(page["ctr"], 0.1)
         self.assertAlmostEqual(page["position"], 11.0)
+
+    def test_metric_totals_do_not_double_count_query_rows(self):
+        totals = metric_totals({
+            "/a": {"clicks": 2, "impressions": 10, "ctr": .2, "position": 4},
+            "/b": {"clicks": 3, "impressions": 30, "ctr": .1, "position": 8},
+        })
+        self.assertEqual(totals["clicks"], 5)
+        self.assertEqual(totals["impressions"], 40)
+        self.assertAlmostEqual(totals["ctr"], .125)
+        self.assertAlmostEqual(totals["position"], 7)
+
+    def test_comparison_retains_new_and_lost_keys(self):
+        current = {
+            "new": {"clicks": 1, "impressions": 20, "ctr": .05, "position": 12},
+            "kept": {"clicks": 2, "impressions": 30, "ctr": 2/30, "position": 8},
+        }
+        previous = {
+            "lost": {"clicks": 1, "impressions": 5, "ctr": .2, "position": 9},
+            "kept": {"clicks": 1, "impressions": 10, "ctr": .1, "position": 11},
+        }
+        rows = {row["key"]: row for row in compare_aggregates(current, previous)}
+        self.assertEqual(rows["new"]["impression_delta"], 20)
+        self.assertEqual(rows["lost"]["impression_delta"], -5)
+        self.assertEqual(rows["kept"]["position_delta"], 3)
 
 
 class FakeRequest:
