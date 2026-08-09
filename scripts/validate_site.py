@@ -25,6 +25,11 @@ BAD_PATTERNS = {
         r"How often should I handle dishwasher .+?\?",
         re.IGNORECASE,
     ),
+    "generic placeholder reference": re.compile(
+        r"<li>\s*(?:manufacturer documentation|appliance care guidance|"
+        r"routine household maintenance guidance|product label directions)\s*</li>",
+        re.IGNORECASE,
+    ),
     "HTML link inside title": re.compile(r"<title[^>]*>[^\n]*<a\b", re.IGNORECASE),
     "HTML link inside meta description": re.compile(
         r"<meta[^>]+name=[\"']description[\"'][^\n]*<a\b", re.IGNORECASE
@@ -145,6 +150,26 @@ for path in HTML_FILES:
                 f"at line {error.lineno}, column {error.colno}"
             )
     if path.parent.parent.name == "articles":
+        external_sources = []
+        for link in parser.anchor_links:
+            parsed_link = urlparse(link)
+            if (
+                parsed_link.scheme == "https"
+                and parsed_link.netloc
+                and parsed_link.netloc != "dishwashercarehub.com"
+            ):
+                external_sources.append(link)
+        if not external_sources:
+            errors.append(
+                f"{path.relative_to(ROOT)}: article has no HTTPS external source link"
+            )
+        if not re.search(
+            r"<h2>(?:Sources and scope notes|References and fact-check notes)</h2>",
+            text,
+        ):
+            errors.append(
+                f"{path.relative_to(ROOT)}: article has no visible source section"
+            )
         meta_matches = re.findall(
             r'<p class="article-meta">Published <time datetime="(\d{4}-\d{2}-\d{2})">'
             r'.+?</time> · Updated <time datetime="(\d{4}-\d{2}-\d{2})">'
